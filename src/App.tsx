@@ -61,7 +61,6 @@ function getSaveTheDateMode(): boolean {
 export function App() {
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>('together');
-  const [newBlessing, setNewBlessing] = useState<{ name: string; relation: string; message: string } | null>(null);
   const isSaveTheDateMode = getSaveTheDateMode();
 
   return (
@@ -107,7 +106,7 @@ export function App() {
               <GalleryGrid activeTab={activeTab} />
 
               {/* Virtual Guestbook & Blessings Wall */}
-              <GuestbookSection newBlessing={newBlessing} />
+              <GuestbookSection />
             </main>
           </>
         )}

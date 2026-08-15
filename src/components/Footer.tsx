@@ -6,7 +6,7 @@ import { WEDDING_DETAILS } from '../data/weddingData';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="relative bg-gradient-to-b from-[#F7F2E8] via-[#FAF6F0] to-[#EFE8D8] text-[#2D3748] pt-16 pb-12 px-4 border-t-2 border-[#D4AF37]/50 overflow-hidden shadow-inner">
+    <footer className="relative bg-gradient-to-b from-[#F7F2E8] via-[#FAF6F0] to-[#EFE8D8] text-[#2D3748] pt-16 pb-14 px-4 border-t-2 border-[#D4AF37]/50 overflow-hidden shadow-inner">
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
         <MandalaPattern size={550} />
@@ -25,14 +25,19 @@ export const Footer: React.FC = () => {
 
         <OrnamentalDivider className="w-full max-w-sm my-6" />
 
-        <p className="text-xs text-[#2D3748]/80 max-w-md mx-auto leading-relaxed font-medium">
-          Thank you for being part of our journey. We look forward to celebrating sacred vows and everlasting memories with you under the stars of Rajasthan.
-        </p>
-
-        <div className="mt-8 text-[11px] text-[#B38728] flex items-center gap-1.5 uppercase tracking-widest font-bold">
-          <span>Crafted with</span>
-          <Heart size={12} className="text-red-500 fill-red-500" />
-          <span>for {WEDDING_DETAILS.coupleNames}</span>
+        {/* Heartfelt Thank You Note Box */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#FFFDF9]/95 border-2 border-[#D4AF37]/50 shadow-md max-w-xl mx-auto text-center relative backdrop-blur-sm">
+          <div className="inline-flex items-center gap-1.5 text-xs font-serif font-extrabold uppercase tracking-[0.2em] text-[#B38728] mb-3">
+            <Heart size={13} className="text-[#D4AF37] fill-[#D4AF37]" />
+            <span>With Heartfelt Gratitude</span>
+            <Heart size={13} className="text-[#D4AF37] fill-[#D4AF37]" />
+          </div>
+          <p className="font-serif italic text-sm sm:text-base text-[#0A4A40] leading-relaxed">
+            "With immense joy and gratitude in our hearts, we thank our beloved families, elders, and dear friends for showering us with eternal blessings and love as we begin this golden lifetime together."
+          </p>
+          <span className="block mt-4 text-xs font-serif font-extrabold tracking-widest uppercase text-[#008070]">
+            — Arjun & Kanishka
+          </span>
         </div>
       </div>
     </footer>
