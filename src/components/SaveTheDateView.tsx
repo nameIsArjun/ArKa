@@ -62,7 +62,7 @@ END:VCALENDAR`;
         </h1>
 
         <p className="font-serif italic text-base sm:text-xl text-[#B38728] mt-2 font-medium">
-          Together with their families, invite you to save the date for their royal wedding
+          Together with their families, invite you to save the date for their wedding
         </p>
 
         <OrnamentalDivider className="max-w-md mx-auto my-6" />
