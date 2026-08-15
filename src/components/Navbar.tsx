@@ -3,6 +3,7 @@ import { MonogramLogo } from './MonogramLogo';
 import { Menu, X, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WEDDING_DETAILS } from '../data/weddingData';
+import { AudioPlayer } from './AudioPlayer';
 
 interface NavbarProps {
   onReplaySplash: () => void;
@@ -88,10 +89,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </motion.div>
 
-        {/* Right Links & Replay Action */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Right Links, Audio Player & Replay Action */}
+        <div className="flex items-center gap-3">
           {!isSaveTheDateMode && (
-            <nav className="flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold mr-2">
+            <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold mr-2">
               {navLinks.slice(2).map((link) => (
                 <a
                   key={link.label}
@@ -105,6 +106,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
           )}
 
+          {/* Soothing Background Audio Player Toggle */}
+          <AudioPlayer />
+
           {/* Replay Intro Button */}
           <button
             onClick={onReplaySplash}
@@ -113,24 +117,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <RotateCcw size={14} />
           </button>
-        </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center gap-2">
-          {!isSaveTheDateMode ? (
+          {/* Mobile Menu Button */}
+          {!isSaveTheDateMode && (
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#0A4A40] hover:text-[#B38728]"
+              className="md:hidden p-1.5 text-[#0A4A40] hover:text-[#B38728]"
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          ) : (
-            <button
-              onClick={onReplaySplash}
-              title="Replay Entrance Intro"
-              className="p-1.5 rounded-full text-[#B38728] border border-[#D4AF37]/40"
-            >
-              <RotateCcw size={14} />
             </button>
           )}
         </div>
@@ -157,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </a>
               ))}
 
-              <div className="flex justify-center mt-2 pt-2">
+              <div className="flex items-center justify-center gap-4 mt-2 pt-2">
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);

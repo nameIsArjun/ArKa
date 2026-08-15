@@ -15,7 +15,7 @@ CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
 SUMMARY:Save The Date: Arjun Puri & Kanishka Dhir Wedding
-DESCRIPTION:Save the date for the royal wedding of Arjun Puri & Kanishka Dhir!
+DESCRIPTION:Save the date for the wedding of Arjun Puri & Kanishka Dhir!
 DTSTART:20261112T000000Z
 DTEND:20261112T235959Z
 STATUS:CONFIRMED
