@@ -1,0 +1,74 @@
+[
+  {
+    "id": "f-bride-parents",
+    "name": "Mrs. Sunita Dhir & Late Mr. Rajan Dhir",
+    "relation": "Parents of the Bride",
+    "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Kanishka has brought endless sunshine into our lives. With eternal blessings from Late Mr. Rajan Dhir, we welcome Arjun into our family.\"",
+    "side": "bride"
+  },
+  {
+    "id": "f-bride-bhai-bhabhi",
+    "name": "Mr. Antriksh Dhir & Mrs. Neha Dhir",
+    "relation": "Bhai & Bhabhi of the Bride",
+    "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Excited to welcome Arjun to the Dhir family and celebrate this sacred union in Jammu!\"",
+    "side": "bride"
+  },
+  {
+    "id": "f-bride-chachu-chachi",
+    "name": "Chachu Ji & Chachi Ji",
+    "relation": "Chachu & Chachi (Dhir Family)",
+    "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Showering Kanishka & Arjun with love and blessings for a golden journey ahead.\"",
+    "side": "bride"
+  },
+  {
+    "id": "f-bride-cousins",
+    "name": "Dhir Family Cousins",
+    "relation": "Bride's Squad & Cousins",
+    "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Ready to steal Arjun's shoes and dance our hearts out at the Mehndi & Sangeet!\"",
+    "side": "bride"
+  },
+  {
+    "id": "f-groom-parents",
+    "name": "Mrs. Meena Puri & Mr. Naresh Puri",
+    "relation": "Parents of the Groom",
+    "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Seeing Arjun so deeply in love with Kanishka is our greatest joy. May their sacred bond shine bright forever.\"",
+    "side": "groom"
+  },
+  {
+    "id": "f-groom-brother",
+    "name": "Mr. Anuj Puri",
+    "relation": "Younger Brother of the Groom",
+    "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Arjun Bhaiya found his perfect soulmate! Ready to lead the Baraat with full energy!\"",
+    "side": "groom"
+  },
+  {
+    "id": "f-groom-tau-tai",
+    "name": "Tau Ji & Tai Ji",
+    "relation": "Tau & Tai Ji (Puri Family)",
+    "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400",
+    "note": "\"May Mata Vaishno Devi bless Arjun & Kanishka with a lifetime of health and happiness.\"",
+    "side": "groom"
+  },
+  {
+    "id": "f-groom-bua",
+    "name": "Bua Ji & Bhupha Ji",
+    "relation": "Bua & Bhupha Ji (Puri Family)",
+    "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Sending warm affection, blessings, and excitement for the grand celebrations in Jammu!\"",
+    "side": "groom"
+  },
+  {
+    "id": "f-groom-cousins",
+    "name": "Puri Family Cousins",
+    "relation": "Groom's Squad & Cousins",
+    "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400",
+    "note": "\"Bringing all the love, enthusiasm, and non-stop dance celebrations for Arjun & Kanishka!\"",
+    "side": "groom"
+  }
+]

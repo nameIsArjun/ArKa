@@ -1,0 +1,56 @@
+[
+  {
+    "id": "g1",
+    "title": "Anutham Jammu Sunset",
+    "category": "pre-wedding",
+    "image": "/images/hero_couple.jpg",
+    "aspectRatio": "wide",
+    "caption": "Arjun Puri & Kanishka Dhir celebrating their love at Anutham Hotel, Jammu.",
+    "side": "together"
+  },
+  {
+    "id": "g2",
+    "title": "The Graceful Bride",
+    "category": "pre-wedding",
+    "image": "/images/bride_portrait.jpg",
+    "aspectRatio": "portrait",
+    "caption": "Kanishka Dhir in traditional bridal couture with royal kundan jewellery.",
+    "side": "bride"
+  },
+  {
+    "id": "g3",
+    "title": "The Regal Groom",
+    "category": "pre-wedding",
+    "image": "/images/groom_portrait.jpg",
+    "aspectRatio": "portrait",
+    "caption": "Arjun Puri in a hand-embellished royal safa and achkan.",
+    "side": "groom"
+  },
+  {
+    "id": "g4",
+    "title": "Engagement & Shagun Setup",
+    "category": "engagement",
+    "image": "/images/event_sangeet.jpg",
+    "aspectRatio": "landscape",
+    "caption": "Rings & Shagun ceremony setup at Anutham Hotel, Jammu.",
+    "side": "together"
+  },
+  {
+    "id": "g5",
+    "title": "Grand Ballroom Gala",
+    "category": "sangeet",
+    "image": "/images/event_sangeet.jpg",
+    "aspectRatio": "wide",
+    "caption": "Crystal chandeliers lighting up the grand ballroom at Anutham Hotel, Jammu.",
+    "side": "together"
+  },
+  {
+    "id": "g6",
+    "title": "Pitambari Haldi Setup",
+    "category": "engagement",
+    "image": "/images/event_haldi.jpg",
+    "aspectRatio": "landscape",
+    "caption": "Golden brass urli filled with fragrant yellow petals for Haldi ceremony.",
+    "side": "together"
+  }
+]
