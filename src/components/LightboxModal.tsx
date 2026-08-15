@@ -2,6 +2,7 @@ import React from 'react';
 import { GalleryItem } from '../types/wedding';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface LightboxModalProps {
   item: GalleryItem | null;
@@ -50,7 +51,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({ item, onClose, onP
         >
           <div className="relative w-full h-[60vh] sm:h-[68vh] bg-[#FAF6F0] flex items-center justify-center overflow-hidden">
             <img
-              src={item.image}
+              src={getAssetUrl(item.image)}
               alt={item.title}
               className="w-full h-full object-contain"
               onError={(e) => {

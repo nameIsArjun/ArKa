@@ -4,6 +4,7 @@ import { WEDDING_EVENTS } from '../data/weddingData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OrnamentalDivider } from './MandalaPattern';
 import { Clock, MapPin, Sparkles, ExternalLink, Download, Shirt, X } from 'lucide-react';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface EventTimelineProps {
   activeTab: ActiveTab;
@@ -92,7 +93,7 @@ END:VCALENDAR`;
                   {/* Event Header Image */}
                   <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden mb-6 border border-[#D4AF37]/30">
                     <img
-                      src={evt.image}
+                      src={getAssetUrl(evt.image)}
                       alt={evt.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       onError={(e) => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface MonogramLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -32,9 +33,9 @@ export const MonogramLogo: React.FC<MonogramLogoProps> = ({
   };
 
   const imageSrcMap = {
-    mandala: '/images/royal-mandala-logo.png',
-    card: '/images/royal-card-full.jpg',
-    center: '/images/royal-monogram-center.png',
+    mandala: getAssetUrl('/images/royal-mandala-logo.png'),
+    card: getAssetUrl('/images/royal-card-full.jpg'),
+    center: getAssetUrl('/images/royal-monogram-center.png'),
   };
 
   const { box, text, sparkSize } = sizeMap[size];

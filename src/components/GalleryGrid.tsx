@@ -5,6 +5,7 @@ import { LightboxModal } from './LightboxModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OrnamentalDivider } from './MandalaPattern';
 import { Sparkles, Maximize2, Camera } from 'lucide-react';
+import { getAssetUrl } from '../utils/assetHelper';
 
 interface GalleryGridProps {
   activeTab: ActiveTab;
@@ -99,7 +100,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({ activeTab }) => {
                 className={`relative group rounded-3xl overflow-hidden border border-[#D4AF37]/50 bg-[#FAF6F0] cursor-pointer shadow-md hover:shadow-xl transition-all duration-500 min-h-[260px] ${spanClass}`}
               >
                 <img
-                  src={item.image}
+                  src={getAssetUrl(item.image)}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   onError={(e) => {
