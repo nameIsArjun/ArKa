@@ -19,8 +19,10 @@ export const Footer: React.FC = () => {
           {WEDDING_DETAILS.coupleNames}
         </h3>
 
-        <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#008070] font-bold">
-          #KanishkaWedsArjun • {WEDDING_DETAILS.weddingDateRange} • {WEDDING_DETAILS.city}
+        <p className="mt-1 text-xs text-[#008070] font-bold">
+          <span className="normal-case font-serif tracking-wider text-[#B38728] font-extrabold text-sm sm:text-base">#KanishkaWedsArjun</span>
+          <span className="mx-2 text-[#D4AF37]">•</span>
+          <span className="uppercase tracking-[0.2em]">{WEDDING_DETAILS.weddingDateRange} • {WEDDING_DETAILS.city}</span>
         </p>
 
         <OrnamentalDivider className="w-full max-w-sm my-6" />
