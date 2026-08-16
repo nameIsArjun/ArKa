@@ -2,18 +2,46 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const TRACKS = {
+  shehnai: {
+    name: 'Royal Shehnai & Dholak',
+    url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=indian-wedding-festive-14023.mp3',
+  },
+  sitar: {
+    name: 'Sitar & Bamboo Flute Raga',
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=indian-sitar-ambient-112349.mp3',
+  },
+};
+
+function getActiveTrack(): { name: string; url: string } {
+  const envTrack = import.meta.env.VITE_WEDDING_TRACK?.toLowerCase();
+  if (envTrack === 'sitar') {
+    return TRACKS.sitar;
+  }
+  return TRACKS.shehnai;
+}
+
+function getInitialAutoplay(): boolean {
+  const envVal = import.meta.env.VITE_MUSIC_AUTOPLAY;
+  if (envVal !== undefined && envVal !== '') {
+    return String(envVal).toLowerCase() === 'true';
+  }
+  return false;
+}
+
 export const AudioPlayer: React.FC = () => {
+  const initialAutoplay = getInitialAutoplay();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(!initialAutoplay);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number | null>(null);
+  const stopTimeoutRef = useRef<number | null>(null);
 
-  // High-quality soothing background wedding flute & sitar melody URL
-  const SOOTHING_WEDDING_MUSIC_URL =
-    'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=indian-sitar-ambient-112349.mp3';
+  const activeTrack = getActiveTrack();
 
-  // Fallback Web Audio Synthesizer (Raaga Bhoopali) if MP3 fails to load
+  // Fallback Web Audio Synthesizer (Raaga Bhoopali) if MP3 fails to load or offline
   const startFallbackSynth = () => {
     try {
       if (audioCtxRef.current) return;
@@ -38,7 +66,7 @@ export const AudioPlayer: React.FC = () => {
         osc.frequency.exponentialRampToValueAtTime(freq * 1.015, ctx.currentTime + 0.8);
 
         gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.3);
+        gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.3);
         gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.8);
 
         osc.connect(gain);
@@ -53,7 +81,7 @@ export const AudioPlayer: React.FC = () => {
       playNextNote();
       timerRef.current = window.setInterval(playNextNote, 1400);
     } catch {
-      console.log('Audio Context fallback unavaiable');
+      console.log('Audio Context fallback unavailable');
     }
   };
 
@@ -68,30 +96,49 @@ export const AudioPlayer: React.FC = () => {
     }
   };
 
-  const playMusic = () => {
-    setShowTooltip(false);
-    if (audioRef.current) {
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(() => {
-          startFallbackSynth();
-          setIsPlaying(true);
-        });
-    } else {
-      startFallbackSynth();
-      setIsPlaying(true);
+  const clearAutoStopTimer = () => {
+    if (stopTimeoutRef.current) {
+      clearTimeout(stopTimeoutRef.current);
+      stopTimeoutRef.current = null;
     }
   };
 
   const pauseMusic = () => {
+    clearAutoStopTimer();
     if (audioRef.current) {
       audioRef.current.pause();
     }
     stopFallbackSynth();
     setIsPlaying(false);
+  };
+
+  const playMusic = () => {
+    setShowTooltip(false);
+    clearAutoStopTimer();
+    stopFallbackSynth();
+
+    const startPlayback = () => {
+      setIsPlaying(true);
+      // Auto stop after 15 seconds (15,000 ms)
+      stopTimeoutRef.current = window.setTimeout(() => {
+        pauseMusic();
+      }, 15000);
+    };
+
+    if (audioRef.current) {
+      audioRef.current
+        .play()
+        .then(() => {
+          startPlayback();
+        })
+        .catch(() => {
+          startFallbackSynth();
+          startPlayback();
+        });
+    } else {
+      startFallbackSynth();
+      startPlayback();
+    }
   };
 
   const togglePlay = () => {
@@ -103,23 +150,29 @@ export const AudioPlayer: React.FC = () => {
   };
 
   useEffect(() => {
-    const audio = new Audio(SOOTHING_WEDDING_MUSIC_URL);
+    const audio = new Audio(activeTrack.url);
     audio.loop = true;
-    audio.volume = 0.5; // Mid Volume
+    audio.volume = 0.22; // Soft, gentle background volume level
     audioRef.current = audio;
 
+    // If VITE_MUSIC_AUTOPLAY is true, attempt to play music on mount / first interaction
+    if (initialAutoplay) {
+      playMusic();
+    }
+
     return () => {
+      clearAutoStopTimer();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
       stopFallbackSynth();
     };
-  }, []);
+  }, [activeTrack.url, initialAutoplay]);
 
   return (
     <div className="relative inline-flex items-center">
-      {/* Tooltip Callout Pill */}
+      {/* Floating Tooltip Callout Pill */}
       <AnimatePresence>
         {!isPlaying && showTooltip && (
           <motion.div
@@ -152,10 +205,10 @@ export const AudioPlayer: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Main Music Toggle Button */}
+      {/* Guest Music Toggle Button */}
       <button
         onClick={togglePlay}
-        title={isPlaying ? 'Mute Background Music' : 'Play Soothing Wedding Music'}
+        title={isPlaying ? 'Mute Background Music' : `Play ${activeTrack.name}`}
         className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF9] hover:bg-[#F4EDE2] border border-[#D4AF37]/50 text-[#0A4A40] text-xs font-bold transition-all shadow-sm group select-none cursor-pointer"
       >
         <span className="relative flex h-2 w-2">
@@ -173,7 +226,7 @@ export const AudioPlayer: React.FC = () => {
           <>
             <Volume2 size={14} className="text-[#008070] animate-pulse" />
             <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-[#008070] font-extrabold">
-              Playing Music
+              Playing Music (15s)
             </span>
           </>
         ) : (
