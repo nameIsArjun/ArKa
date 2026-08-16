@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
         </h3>
 
         <p className="mt-1 text-xs uppercase tracking-[0.25em] text-[#008070] font-bold">
-          #ArjunWedsKanishka • {WEDDING_DETAILS.weddingDateRange} • {WEDDING_DETAILS.city}
+          #KanishkaWedsArjun • {WEDDING_DETAILS.weddingDateRange} • {WEDDING_DETAILS.city}
         </p>
 
         <OrnamentalDivider className="w-full max-w-sm my-6" />
