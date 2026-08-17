@@ -12,6 +12,46 @@ import { GuestbookSection } from './components/GuestbookSection';
 import { Footer } from './components/Footer';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
 
+const STORAGE_KEY = 'arka_wedding_guest_side_v1';
+const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+
+/**
+ * Checks localStorage for a valid saved guest side selection within the last 24 hours
+ */
+function getSavedSide(): ActiveTab | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.side && parsed.timestamp) {
+      if (Date.now() - parsed.timestamp < EXPIRY_MS) {
+        return parsed.side as ActiveTab;
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  } catch (e) {
+    console.error('Error reading saved side preference:', e);
+  }
+  return null;
+}
+
+/**
+ * Saves guest side selection to localStorage with timestamp for 24-hour persistence
+ */
+function saveSideToLocalStorage(side: ActiveTab) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ side, timestamp: Date.now() })
+    );
+  } catch (e) {
+    console.error('Error saving side preference:', e);
+  }
+}
+
 /**
  * Save The Date Mode Evaluation Rule:
  * 1. If VITE_SAVE_THE_DATE_MODE is false (or set to false):
@@ -58,18 +98,20 @@ function getSaveTheDateMode(): boolean {
 }
 
 /**
- * Evaluates Groom, Bride, or Admin role based on URL parameters or environment configuration:
- * - ?side=groom / ?groom=true -> Groom side by default (Switch side button HIDDEN)
- * - ?side=bride / ?bride=true -> Bride side by default (Switch side button HIDDEN)
- * - ?admin=true / ?side=admin -> Admin mode enabled (Switch side button SHOWN)
+ * Role & Side Selection Evaluation with 24-Hour Memory:
+ * - ?side=groom / ?groom=true -> Pre-select Groom side, save for 24h, skip popup modal
+ * - ?side=bride / ?bride=true -> Pre-select Bride side, save for 24h, skip popup modal
+ * - ?admin=true / ?side=admin -> Admin mode enabled (Switch Side button shown)
+ * - Direct link without filters (http://localhost:5173/ or ?mode=full):
+ *   -> Checks 24-hour localStorage cache! If cached, loads saved side. If new/expired, asks guest!
  */
 function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boolean; isAdmin: boolean } {
   if (typeof window === 'undefined') {
-    return { activeTab: 'groom', hasSelectedTeam: true, isAdmin: false };
+    return { activeTab: 'groom', hasSelectedTeam: false, isAdmin: false };
   }
 
   const params = new URLSearchParams(window.location.search);
-  const sideParam = (params.get('side') || params.get('role') || params.get('mode') || '').toLowerCase();
+  const sideParam = (params.get('side') || params.get('role') || '').toLowerCase();
   
   const isAdminParam =
     params.get('admin')?.toLowerCase() === 'true' ||
@@ -82,19 +124,32 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
 
   const envTrack = (import.meta.env.VITE_WEDDING_TRACK || '').toLowerCase();
 
-  // If Admin URL or Env
+  // 1. Admin link: enables admin mode with switch side button
   if (isAdminParam || envTrack === 'admin') {
     const tab: ActiveTab = isBrideParam ? 'bride' : 'groom';
     return { activeTab: tab, hasSelectedTeam: true, isAdmin: true };
   }
 
-  // If Bride URL or Env
+  // 2. Explicit Bride link: pre-selects Bride side & saves for 24h
   if (isBrideParam || envTrack === 'bride') {
+    saveSideToLocalStorage('bride');
     return { activeTab: 'bride', hasSelectedTeam: true, isAdmin: false };
   }
 
-  // Default to Groom side
-  return { activeTab: isGroomParam ? 'groom' : 'groom', hasSelectedTeam: true, isAdmin: false };
+  // 3. Explicit Groom link: pre-selects Groom side & saves for 24h
+  if (isGroomParam || envTrack === 'groom') {
+    saveSideToLocalStorage('groom');
+    return { activeTab: 'groom', hasSelectedTeam: true, isAdmin: false };
+  }
+
+  // 4. Direct link without filters: Check 24-hour saved preference!
+  const savedSide = getSavedSide();
+  if (savedSide) {
+    return { activeTab: savedSide, hasSelectedTeam: true, isAdmin: false };
+  }
+
+  // 5. First-time or expired direct entry: ask guest which side!
+  return { activeTab: 'groom', hasSelectedTeam: false, isAdmin: false };
 }
 
 export function App() {
@@ -108,6 +163,7 @@ export function App() {
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
     setHasSelectedTeam(true);
+    saveSideToLocalStorage(tab);
   };
 
   return (

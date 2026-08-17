@@ -39,7 +39,7 @@ function getEventShortTitle(evt: EventItem): string {
 }
 
 export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabChange, hasSelectedTeam, isAdmin }) => {
-  const [showTeamModal, setShowTeamModal] = useState<boolean>(false);
+  const [showTeamModal, setShowTeamModal] = useState<boolean>(!hasSelectedTeam);
   const [selectedMapEvent, setSelectedMapEvent] = useState<EventItem | null>(null);
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [direction, setDirection] = useState<number>(1); // 1 = down, -1 = up
