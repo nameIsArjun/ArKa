@@ -106,13 +106,47 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
     }
   };
 
+  const touchStartY = useRef<number | null>(null);
+  const touchEndY = useRef<number | null>(null);
+
   // Handle Mouse Wheel scrolling inside fixed right stage area on desktop
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.deltaY > 30) {
+    if (e.deltaY > 35 && activeIndex < filteredEvents.length - 1) {
       handleNext();
-    } else if (e.deltaY < -30) {
+    } else if (e.deltaY < -35 && activeIndex > 0) {
       handlePrev();
     }
+  };
+
+  // Handle Mobile Touch Swiping UP & DOWN on cards
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.targetTouches[0].clientY;
+    touchEndY.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndY.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartY.current === null || touchEndY.current === null) return;
+    const distance = touchStartY.current - touchEndY.current;
+    const minSwipeDistance = 45; // Smooth 45px threshold for vertical swipe gesture
+
+    if (distance > minSwipeDistance) {
+      // Swiped UP -> show next event card if not at end
+      if (activeIndex < filteredEvents.length - 1) {
+        handleNext();
+      }
+    } else if (distance < -minSwipeDistance) {
+      // Swiped DOWN -> show previous event card if not at start
+      if (activeIndex > 0) {
+        handlePrev();
+      }
+    }
+
+    touchStartY.current = null;
+    touchEndY.current = null;
   };
 
   const currentEvt = filteredEvents[activeIndex] || filteredEvents[0];
@@ -345,7 +379,10 @@ END:VCALENDAR`;
             <div
               ref={stageAreaRef}
               onWheel={handleWheel}
-              className="lg:col-span-8 relative h-[640px] flex flex-col justify-between"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="lg:col-span-8 relative h-[640px] flex flex-col justify-between touch-pan-y"
             >
               <AnimatePresence mode="wait" initial={false}>
                 {currentEvt && (
