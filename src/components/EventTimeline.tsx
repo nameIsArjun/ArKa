@@ -28,7 +28,7 @@ function getEventArtwork(eventId: string): string {
   if (eventId.includes('shagun')) return getAssetUrl('/images/art/art_shagun.jpg');
   if (eventId.includes('satsang')) return getAssetUrl('/images/art/art_satsang.jpg');
   if (eventId.includes('sehra')) return getAssetUrl('/images/art/art_sehra.jpg');
-  if (eventId.includes('haldi')) return getAssetUrl('/images/art/art_haldi.jpg');
+  if (eventId.includes('haldi') || eventId.includes('sant')) return getAssetUrl('/images/art/art_haldi.jpg');
   if (eventId.includes('engagement')) return getAssetUrl('/images/art/art_engagement.jpg');
   if (eventId.includes('mehndi')) return getAssetUrl('/images/art/art_mehndi.jpg');
   if (eventId.includes('sangeet')) return getAssetUrl('/images/art/art_sangeet.jpg');
@@ -39,10 +39,12 @@ function getEventArtwork(eventId: string): string {
 function getEventShortTitle(evt: EventItem): string {
   if (evt.id.includes('shagun')) return 'Khule Shagun';
   if (evt.id.includes('satsang')) return 'Divine Satsang';
-  if (evt.id.includes('engagement')) return 'Sangeet Gala';
+  if (evt.id.includes('sangeet')) return 'Shagun & Sangeet';
+  if (evt.id.includes('engagement')) return 'Engagement & Tikka';
+  if (evt.id.includes('sant')) return 'Sant Ritual';
   if (evt.id.includes('haldi')) return 'Pitambari Haldi';
   if (evt.id.includes('sehra')) return 'Sehra Bandi';
-  if (evt.id.includes('vivah')) return 'Shubh Vivah';
+  if (evt.id.includes('vivah') || evt.id.includes('wedding')) return 'Shubh Vivah';
   if (evt.id.includes('mehndi')) return 'Mehndi Night';
   return evt.title;
 }
@@ -184,7 +186,7 @@ END:VCALENDAR`;
       {!hasSelectedTeam ? (
         <div className="bg-[#FFFDF9] border-2 border-[#D4AF37] rounded-3xl p-8 sm:p-12 shadow-2xl text-center max-w-2xl mx-auto my-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:20px_20px] opacity-10" />
-          
+
           <div className="relative z-10 space-y-4">
             <div className="w-16 h-16 rounded-full bg-[#FAF6F0] border-2 border-[#D4AF37] text-[#0A4A40] flex items-center justify-center mx-auto shadow-md">
               <Lock size={28} className="text-[#B38728]" />
@@ -225,11 +227,10 @@ END:VCALENDAR`;
                     className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer"
                   >
                     <div
-                      className={`relative w-14 h-14 rounded-full p-0.5 transition-all duration-300 ${
-                        isActive
-                          ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] shadow-md scale-105 ring-2 ring-[#D4AF37]'
-                          : 'bg-[#D4AF37]/30 hover:bg-[#D4AF37]/60'
-                      }`}
+                      className={`relative w-14 h-14 rounded-full p-0.5 transition-all duration-300 ${isActive
+                        ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] shadow-md scale-105 ring-2 ring-[#D4AF37]'
+                        : 'bg-[#D4AF37]/30 hover:bg-[#D4AF37]/60'
+                        }`}
                     >
                       <div className="w-full h-full rounded-full overflow-hidden bg-[#FFFDF9] border-2 border-[#FFFDF9] p-0.5 flex items-center justify-center">
                         <img
@@ -244,9 +245,8 @@ END:VCALENDAR`;
                     </div>
 
                     <span
-                      className={`text-[10px] font-serif font-extrabold max-w-[65px] truncate transition-colors ${
-                        isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]/70'
-                      }`}
+                      className={`text-[10px] font-serif font-extrabold max-w-[65px] truncate transition-colors ${isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]/70'
+                        }`}
                     >
                       {getEventShortTitle(evt)}
                     </span>
@@ -258,7 +258,7 @@ END:VCALENDAR`;
 
           {/* DESKTOP & MOBILE MAIN STAGE CONTAINER */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch min-h-[640px]">
-            
+
             {/* DESKTOP VERTICAL SIDEBAR MENU */}
             <div className="hidden lg:flex lg:col-span-4 flex-col bg-[#FFFDF9] border-2 border-[#D4AF37]/60 rounded-3xl p-4 shadow-xl space-y-3 h-[640px]">
               <div className="px-3 py-2 border-b border-[#D4AF37]/30 text-left flex items-center justify-between">
@@ -282,19 +282,17 @@ END:VCALENDAR`;
                     <button
                       key={evt.id}
                       onClick={() => selectEventIndex(idx)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 text-left cursor-pointer border-2 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-[#FAF6F0] via-[#FFFDF9] to-[#FAF6F0] border-[#D4AF37] shadow-md'
-                          : 'bg-[#FFFDF9] border-transparent hover:bg-[#FAF6F0]/60 hover:border-[#D4AF37]/30'
-                      }`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 text-left cursor-pointer border-2 ${isActive
+                        ? 'bg-gradient-to-r from-[#FAF6F0] via-[#FFFDF9] to-[#FAF6F0] border-[#D4AF37] shadow-md'
+                        : 'bg-[#FFFDF9] border-transparent hover:bg-[#FAF6F0]/60 hover:border-[#D4AF37]/30'
+                        }`}
                     >
                       {/* Vertical Story Avatar Circle */}
                       <div
-                        className={`relative w-12 h-12 rounded-full shrink-0 p-0.5 transition-all ${
-                          isActive
-                            ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] ring-2 ring-[#D4AF37]'
-                            : 'bg-[#D4AF37]/30'
-                        }`}
+                        className={`relative w-12 h-12 rounded-full shrink-0 p-0.5 transition-all ${isActive
+                          ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] ring-2 ring-[#D4AF37]'
+                          : 'bg-[#D4AF37]/30'
+                          }`}
                       >
                         <div className="w-full h-full rounded-full overflow-hidden bg-[#FFFDF9] p-0.5 flex items-center justify-center">
                           <img
@@ -311,9 +309,8 @@ END:VCALENDAR`;
                       {/* Event Title & Date Info */}
                       <div className="min-w-0 flex-1">
                         <span
-                          className={`font-serif font-extrabold text-sm block truncate ${
-                            isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]'
-                          }`}
+                          className={`font-serif font-extrabold text-sm block truncate ${isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]'
+                            }`}
                         >
                           {getEventShortTitle(evt)}
                         </span>
@@ -334,7 +331,7 @@ END:VCALENDAR`;
 
             {/* RIGHT FIXED STAGE AREA WITH SWIPER TOUCH PHYSICS */}
             <div className="lg:col-span-8 relative h-[640px] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
-              
+
               {/* SWIPER CONTAINER */}
               <Swiper
                 onSwiper={(swiper) => (swiperRef.current = swiper)}
@@ -349,7 +346,7 @@ END:VCALENDAR`;
                 {filteredEvents.map((evt, idx) => (
                   <SwiperSlide key={evt.id} className="w-full h-full bg-[#FFFDF9]">
                     <div className="w-full h-full flex flex-col justify-between text-left relative overflow-hidden">
-                      
+
                       {/* Dynamic Event Background Particle Backdrop */}
                       <EventBackgroundAnimation eventId={evt.id} category={evt.category} isInView={true} />
 
@@ -378,11 +375,10 @@ END:VCALENDAR`;
                           disabled={activeIndex === 0}
                           onClick={handlePrev}
                           aria-label="Previous Event"
-                          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${
-                            activeIndex === 0
-                              ? 'opacity-30 cursor-not-allowed text-gray-400'
-                              : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
-                          }`}
+                          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === 0
+                            ? 'opacity-30 cursor-not-allowed text-gray-400'
+                            : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
+                            }`}
                         >
                           <ChevronLeft size={20} />
                         </button>
@@ -392,11 +388,10 @@ END:VCALENDAR`;
                           disabled={activeIndex === filteredEvents.length - 1}
                           onClick={handleNext}
                           aria-label="Next Event"
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${
-                            activeIndex === filteredEvents.length - 1
-                              ? 'opacity-30 cursor-not-allowed text-gray-400'
-                              : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
-                          }`}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === filteredEvents.length - 1
+                            ? 'opacity-30 cursor-not-allowed text-gray-400'
+                            : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
+                            }`}
                         >
                           <ChevronRight size={20} />
                         </button>
@@ -414,7 +409,7 @@ END:VCALENDAR`;
 
                       {/* Stage Card Details Body */}
                       <div className="p-6 space-y-4 relative z-10 flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between">
-                        
+
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold text-[#0A4A40]">
                             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/40 shadow-xs">
@@ -529,7 +524,7 @@ END:VCALENDAR`;
 
               {/* Horizontal 2 Cards Grid: Strictly Bride or Groom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 text-left">
-                
+
                 {/* Dulhan (Bride) Card */}
                 <div
                   onClick={() => handleSelectTeam('bride')}
