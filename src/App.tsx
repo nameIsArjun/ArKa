@@ -5,7 +5,6 @@ import { SplashLoader } from './components/SplashLoader';
 import { Navbar } from './components/Navbar';
 import { HeroHeader } from './components/HeroHeader';
 import { SaveTheDateView } from './components/SaveTheDateView';
-import { TabSwitch } from './components/TabSwitch';
 import { EventTimeline } from './components/EventTimeline';
 import { FamilyGrid } from './components/FamilyGrid';
 import { GalleryGrid } from './components/GalleryGrid';
@@ -58,10 +57,58 @@ function getSaveTheDateMode(): boolean {
   return true;
 }
 
+/**
+ * Evaluates Groom, Bride, or Admin role based on URL parameters or environment configuration:
+ * - ?side=groom / ?groom=true -> Groom side by default (Switch side button HIDDEN)
+ * - ?side=bride / ?bride=true -> Bride side by default (Switch side button HIDDEN)
+ * - ?admin=true / ?side=admin -> Admin mode enabled (Switch side button SHOWN)
+ */
+function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boolean; isAdmin: boolean } {
+  if (typeof window === 'undefined') {
+    return { activeTab: 'groom', hasSelectedTeam: true, isAdmin: false };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const sideParam = (params.get('side') || params.get('role') || params.get('mode') || '').toLowerCase();
+  
+  const isAdminParam =
+    params.get('admin')?.toLowerCase() === 'true' ||
+    params.get('admin') === '1' ||
+    sideParam === 'admin' ||
+    params.has('admin');
+
+  const isBrideParam = sideParam === 'bride' || params.has('bride') || window.location.hostname.includes('bride');
+  const isGroomParam = sideParam === 'groom' || params.has('groom') || window.location.hostname.includes('groom');
+
+  const envTrack = (import.meta.env.VITE_WEDDING_TRACK || '').toLowerCase();
+
+  // If Admin URL or Env
+  if (isAdminParam || envTrack === 'admin') {
+    const tab: ActiveTab = isBrideParam ? 'bride' : 'groom';
+    return { activeTab: tab, hasSelectedTeam: true, isAdmin: true };
+  }
+
+  // If Bride URL or Env
+  if (isBrideParam || envTrack === 'bride') {
+    return { activeTab: 'bride', hasSelectedTeam: true, isAdmin: false };
+  }
+
+  // Default to Groom side
+  return { activeTab: isGroomParam ? 'groom' : 'groom', hasSelectedTeam: true, isAdmin: false };
+}
+
 export function App() {
+  const initialRole = getInitialSideAndRole();
   const [showSplash, setShowSplash] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('together');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialRole.activeTab);
+  const [hasSelectedTeam, setHasSelectedTeam] = useState<boolean>(initialRole.hasSelectedTeam);
+  const [isAdmin] = useState<boolean>(initialRole.isAdmin);
   const isSaveTheDateMode = getSaveTheDateMode();
+
+  const handleTabChange = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setHasSelectedTeam(true);
+  };
 
   return (
     <LayoutGroup>
@@ -89,15 +136,14 @@ export function App() {
             {/* Hero Header Section */}
             <HeroHeader />
 
-            {/* Always Floating Perspective Switcher: Bride | Together | Groom */}
-            <TabSwitch
-              activeTab={activeTab}
-              onTabChange={(tab) => setActiveTab(tab)}
-            />
-
             <main className="relative z-20 space-y-12 pt-8">
               {/* Interactive Event Itinerary */}
-              <EventTimeline activeTab={activeTab} />
+              <EventTimeline
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                hasSelectedTeam={hasSelectedTeam}
+                isAdmin={isAdmin}
+              />
 
               {/* Family & Entourage Grid */}
               <FamilyGrid activeTab={activeTab} />
