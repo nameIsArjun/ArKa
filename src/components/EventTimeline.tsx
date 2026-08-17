@@ -3,9 +3,18 @@ import { ActiveTab, EventItem } from '../types/wedding';
 import { WEDDING_EVENTS } from '../data/weddingData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OrnamentalDivider } from './MandalaPattern';
-import { Clock, MapPin, Sparkles, ExternalLink, Download, Shirt, X, Lock, RefreshCw, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { Clock, MapPin, Sparkles, ExternalLink, Download, Shirt, X, Lock, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAssetUrl } from '../utils/assetHelper';
 import { EventBackgroundAnimation } from './EventBackgroundAnimation';
+
+// Swiper React Components & Modules
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectFade, Keyboard } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+
+// Swiper Styles
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 
 interface EventTimelineProps {
   activeTab: ActiveTab;
@@ -42,9 +51,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
   const [showTeamModal, setShowTeamModal] = useState<boolean>(!hasSelectedTeam);
   const [selectedMapEvent, setSelectedMapEvent] = useState<EventItem | null>(null);
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [direction, setDirection] = useState<number>(1); // 1 = down, -1 = up
 
-  const stageAreaRef = useRef<HTMLDivElement>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
 
   // Automatically trigger popup modal ONLY when guest scrolls down to Itinerary section if team is not chosen yet
   useEffect(() => {
@@ -84,72 +92,21 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
   // Reset active index if tab changes
   useEffect(() => {
     setActiveIndex(0);
+    swiperRef.current?.slideTo(0);
   }, [activeTab]);
 
   const selectEventIndex = (newIdx: number) => {
-    if (newIdx === activeIndex) return;
-    setDirection(newIdx > activeIndex ? 1 : -1);
     setActiveIndex(newIdx);
+    swiperRef.current?.slideTo(newIdx);
   };
 
   const handleNext = () => {
-    if (activeIndex < filteredEvents.length - 1) {
-      setDirection(1);
-      setActiveIndex((prev) => prev + 1);
-    }
+    swiperRef.current?.slideNext();
   };
 
   const handlePrev = () => {
-    if (activeIndex > 0) {
-      setDirection(-1);
-      setActiveIndex((prev) => prev - 1);
-    }
+    swiperRef.current?.slidePrev();
   };
-
-  const touchStartY = useRef<number | null>(null);
-  const touchEndY = useRef<number | null>(null);
-
-  // Handle Mouse Wheel scrolling inside fixed right stage area on desktop
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.deltaY > 35 && activeIndex < filteredEvents.length - 1) {
-      handleNext();
-    } else if (e.deltaY < -35 && activeIndex > 0) {
-      handlePrev();
-    }
-  };
-
-  // Handle Mobile Touch Swiping UP & DOWN on cards
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.targetTouches[0].clientY;
-    touchEndY.current = e.targetTouches[0].clientY;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndY.current = e.targetTouches[0].clientY;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartY.current === null || touchEndY.current === null) return;
-    const distance = touchStartY.current - touchEndY.current;
-    const minSwipeDistance = 45; // Smooth 45px threshold for vertical swipe gesture
-
-    if (distance > minSwipeDistance) {
-      // Swiped UP -> show next event card if not at end
-      if (activeIndex < filteredEvents.length - 1) {
-        handleNext();
-      }
-    } else if (distance < -minSwipeDistance) {
-      // Swiped DOWN -> show previous event card if not at start
-      if (activeIndex > 0) {
-        handlePrev();
-      }
-    }
-
-    touchStartY.current = null;
-    touchEndY.current = null;
-  };
-
-  const currentEvt = filteredEvents[activeIndex] || filteredEvents[0];
 
   // Generate .ics calendar download for an event
   const downloadIcs = (evt: EventItem) => {
@@ -251,7 +208,7 @@ END:VCALENDAR`;
           </div>
         </div>
       ) : (
-        /* FIXED STAGE + VERTICAL CARD SWITCHER (CARDS MOVE UP/DOWN WITHIN THIS FIXED STAGE) */
+        /* SWIPER DRIVEN ROYAL ITINERARY STAGE */
         <div className="space-y-6">
 
           {/* MOBILE ONLY: HORIZONTAL INSTAGRAM STORY BAR */}
@@ -375,159 +332,162 @@ END:VCALENDAR`;
               </div>
             </div>
 
-            {/* RIGHT FIXED STAGE AREA: CARDS SLIDE UP & DOWN WITHIN THIS STAGE (NO PAGE SCROLLING DOWN) */}
-            <div
-              ref={stageAreaRef}
-              onWheel={handleWheel}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="lg:col-span-8 relative h-[640px] flex flex-col justify-between touch-pan-y"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {currentEvt && (
-                  <motion.div
-                    key={currentEvt.id}
-                    initial={{ opacity: 0, y: direction * 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: direction * -40 }}
-                    transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className="w-full h-full bg-[#FFFDF9] border-2 border-[#D4AF37] rounded-3xl overflow-hidden shadow-2xl relative group text-left flex flex-col justify-between"
-                  >
-                    {/* Dynamic Event Background Particle Backdrop */}
-                    <EventBackgroundAnimation eventId={currentEvt.id} category={currentEvt.category} isInView={true} />
-
-                    {/* Stage Hero Artwork Image Header */}
-                    <div className="relative h-60 sm:h-72 bg-[#FFFDF9] border-b-2 border-[#D4AF37]/40 flex items-center justify-center p-3 shrink-0">
-                      <img
-                        src={getEventArtwork(currentEvt.id)}
-                        alt={currentEvt.title}
-                        className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/90 via-[#0A4A40]/20 to-transparent pointer-events-none" />
-
-                      {/* Date Tag */}
-                      <div className="absolute top-4 left-4 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-md flex items-center gap-1.5">
-                        <Calendar size={13} className="text-[#B38728]" />
-                        <span>{currentEvt.date}</span>
-                      </div>
-
-                      {/* Event Badge */}
-                      <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0A4A40] border-2 border-[#D4AF37] text-[#FFFDF9] text-xs font-serif font-extrabold flex items-center justify-center shadow-md">
-                        #{activeIndex + 1}
-                      </div>
-
-                      {/* Title Overlay */}
-                      <div className="absolute bottom-4 left-4 right-4 text-left">
-                        <span className="text-[10px] uppercase tracking-widest text-[#F3E5AB] font-bold block">
-                          {currentEvt.subtitle}
-                        </span>
-                        <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#FFFDF9]">
-                          {currentEvt.title}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Stage Card Details Body */}
-                    <div className="p-6 space-y-4 relative z-10 flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between">
+            {/* RIGHT FIXED STAGE AREA WITH SWIPER TOUCH PHYSICS */}
+            <div className="lg:col-span-8 relative h-[640px] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
+              
+              {/* SWIPER CONTAINER */}
+              <Swiper
+                onSwiper={(swiper) => (swiperRef.current = swiper)}
+                onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+                modules={[EffectFade, Keyboard]}
+                effect="fade"
+                fadeEffect={{ crossFade: true }}
+                keyboard={{ enabled: true }}
+                grabCursor={true}
+                className="w-full h-full"
+              >
+                {filteredEvents.map((evt, idx) => (
+                  <SwiperSlide key={evt.id} className="w-full h-full bg-[#FFFDF9]">
+                    <div className="w-full h-full flex flex-col justify-between text-left relative overflow-hidden">
                       
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold text-[#0A4A40]">
-                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/40 shadow-xs">
-                            <Clock size={13} className="text-[#B38728] shrink-0" />
-                            <span>{currentEvt.time}</span>
-                          </div>
+                      {/* Dynamic Event Background Particle Backdrop */}
+                      <EventBackgroundAnimation eventId={evt.id} category={evt.category} isInView={true} />
 
-                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/40 shadow-xs">
-                            <MapPin size={13} className="text-[#008070] shrink-0" />
-                            <span>{currentEvt.location}</span>
-                          </div>
+                      {/* Stage Hero Artwork Image Header */}
+                      <div className="relative h-60 sm:h-72 bg-[#FFFDF9] border-b-2 border-[#D4AF37]/40 flex items-center justify-center p-3 shrink-0">
+                        <img
+                          src={getEventArtwork(evt.id)}
+                          alt={evt.title}
+                          className="w-full h-full object-contain object-center"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/90 via-[#0A4A40]/20 to-transparent pointer-events-none" />
+
+                        {/* Date Tag */}
+                        <div className="absolute top-4 left-4 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-md flex items-center gap-1.5 z-20">
+                          <Calendar size={13} className="text-[#B38728]" />
+                          <span>{evt.date}</span>
                         </div>
 
-                        <div className="text-xs text-[#2D3748]">
-                          <span className="font-bold text-[#0A4A40] block text-sm">{currentEvt.venueName}</span>
-                          <span className="text-[11px] text-[#2D3748]/75">{currentEvt.address}</span>
+                        {/* Top Right Counter Badge */}
+                        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-md z-20">
+                          {idx + 1} of {filteredEvents.length}
                         </div>
 
-                        {/* Dress Code Box */}
-                        <div className="p-3.5 rounded-2xl bg-[#FAF6F0]/90 border border-[#D4AF37]/40 flex items-start gap-3 backdrop-blur-sm">
-                          <Shirt size={17} className="text-[#B38728] shrink-0 mt-0.5" />
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-serif font-extrabold uppercase tracking-wider text-[#0A4A40]">
-                                Dress Code: {currentEvt.dressCode}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {currentEvt.dressCodeColors.map((color) => (
-                                  <span
-                                    key={color}
-                                    className="w-3 h-3 rounded-full border border-black/20 shadow-xs"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-[11px] text-[#2D3748]/85 font-medium">
-                              {currentEvt.dressCodeDescription}
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="text-xs sm:text-sm text-[#2D3748] leading-relaxed font-serif italic">
-                          "{currentEvt.description}"
-                        </p>
-                      </div>
-
-                      {/* Action Buttons & Stage Stepper Controls */}
-                      <div className="pt-3 border-t border-[#D4AF37]/20 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                        {/* ARTWORK CENTER LEFT FLOATING PREVIOUS ARROW */}
                         <button
-                          onClick={() => setSelectedMapEvent(currentEvt)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-[#0A4A40] hover:text-[#008070] transition-colors cursor-pointer"
+                          disabled={activeIndex === 0}
+                          onClick={handlePrev}
+                          aria-label="Previous Event"
+                          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${
+                            activeIndex === 0
+                              ? 'opacity-30 cursor-not-allowed text-gray-400'
+                              : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
+                          }`}
                         >
-                          <MapPin size={14} className="text-[#B38728]" />
-                          <span>View Directions</span>
+                          <ChevronLeft size={20} />
                         </button>
 
-                        {/* Prev / Next Card Stage Arrows */}
-                        <div className="flex items-center gap-2">
+                        {/* ARTWORK CENTER RIGHT FLOATING NEXT ARROW */}
+                        <button
+                          disabled={activeIndex === filteredEvents.length - 1}
+                          onClick={handleNext}
+                          aria-label="Next Event"
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${
+                            activeIndex === filteredEvents.length - 1
+                              ? 'opacity-30 cursor-not-allowed text-gray-400'
+                              : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
+                          }`}
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+
+                        {/* Title Overlay */}
+                        <div className="absolute bottom-4 left-4 right-4 text-left">
+                          <span className="text-[10px] uppercase tracking-widest text-[#F3E5AB] font-bold block">
+                            {evt.subtitle}
+                          </span>
+                          <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#FFFDF9]">
+                            {evt.title}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Stage Card Details Body */}
+                      <div className="p-6 space-y-4 relative z-10 flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between">
+                        
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold text-[#0A4A40]">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/40 shadow-xs">
+                              <Clock size={13} className="text-[#B38728] shrink-0" />
+                              <span>{evt.time}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/40 shadow-xs">
+                              <MapPin size={13} className="text-[#008070] shrink-0" />
+                              <span>{evt.location}</span>
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-[#2D3748]">
+                            <span className="font-bold text-[#0A4A40] block text-sm">{evt.venueName}</span>
+                            <span className="text-[11px] text-[#2D3748]/75">{evt.address}</span>
+                          </div>
+
+                          {/* Dress Code Box */}
+                          <div className="p-3.5 rounded-2xl bg-[#FAF6F0]/90 border border-[#D4AF37]/40 flex items-start gap-3 backdrop-blur-sm">
+                            <Shirt size={17} className="text-[#B38728] shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-serif font-extrabold uppercase tracking-wider text-[#0A4A40]">
+                                  Dress Code: {evt.dressCode}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  {evt.dressCodeColors.map((color) => (
+                                    <span
+                                      key={color}
+                                      className="w-3 h-3 rounded-full border border-black/20 shadow-xs"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-[#2D3748]/85 font-medium">
+                                {evt.dressCodeDescription}
+                              </p>
+                            </div>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-[#2D3748] leading-relaxed font-serif italic">
+                            "{evt.description}"
+                          </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-3 border-t border-[#D4AF37]/20 flex flex-wrap items-center justify-between gap-3 shrink-0">
                           <button
-                            disabled={activeIndex === 0}
-                            onClick={handlePrev}
-                            className={`p-2 rounded-full border transition-all cursor-pointer ${
-                              activeIndex === 0
-                                ? 'opacity-30 cursor-not-allowed border-gray-300'
-                                : 'bg-[#FAF6F0] hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white border-[#D4AF37]/50 shadow-xs'
-                            }`}
+                            onClick={() => setSelectedMapEvent(evt)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-[#0A4A40] hover:text-[#008070] transition-colors cursor-pointer"
                           >
-                            <ChevronUp size={16} />
-                          </button>
-                          
-                          <button
-                            disabled={activeIndex === filteredEvents.length - 1}
-                            onClick={handleNext}
-                            className={`p-2 rounded-full border transition-all cursor-pointer ${
-                              activeIndex === filteredEvents.length - 1
-                                ? 'opacity-30 cursor-not-allowed border-gray-300'
-                                : 'bg-[#FAF6F0] hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white border-[#D4AF37]/50 shadow-xs'
-                            }`}
-                          >
-                            <ChevronDown size={16} />
+                            <MapPin size={14} className="text-[#B38728]" />
+                            <span>View Directions</span>
                           </button>
 
                           <button
-                            onClick={() => downloadIcs(currentEvt)}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#F4EDE2] hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white border border-[#D4AF37]/50 text-xs font-bold transition-all shadow-sm cursor-pointer ml-2"
+                            onClick={() => downloadIcs(evt)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#F4EDE2] hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white border border-[#D4AF37]/50 text-xs font-bold transition-all shadow-sm cursor-pointer"
                           >
                             <Download size={13} />
                             <span>Add to Calendar</span>
                           </button>
                         </div>
+
                       </div>
 
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
             </div>
 
           </div>

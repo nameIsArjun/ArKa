@@ -8,11 +8,15 @@ import { AudioPlayer } from './AudioPlayer';
 interface NavbarProps {
   onReplaySplash: () => void;
   isSaveTheDateMode: boolean;
+  showPillarsOfLove?: boolean;
+  showVisualMemories?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onReplaySplash,
   isSaveTheDateMode,
+  showPillarsOfLove = false,
+  showVisualMemories = false,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [showNavbarLogo, setShowNavbarLogo] = useState(false);
@@ -28,11 +32,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinks = [
-    { label: 'Events', href: '#itinerary' },
-    { label: 'Entourage', href: '#family' },
-    { label: 'Gallery', href: '#gallery' },
-    { label: 'Guestbook', href: '#guestbook' },
-  ];
+    { label: 'Events', href: '#itinerary', show: true },
+    { label: 'Entourage', href: '#family', show: showPillarsOfLove },
+    { label: 'Gallery', href: '#gallery', show: showVisualMemories },
+    { label: 'Guestbook', href: '#guestbook', show: true },
+  ].filter((link) => link.show);
 
   return (
     <header
@@ -46,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Left Links (Desktop) */}
         {!isSaveTheDateMode ? (
           <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold">
-            {navLinks.slice(0, 2).map((link) => (
+            {navLinks.filter((_, idx) => idx < Math.ceil(navLinks.length / 2)).map((link) => (
               <a
                 key={link.label}
                 href={link.href}
@@ -93,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-3">
           {!isSaveTheDateMode && (
             <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold mr-2">
-              {navLinks.slice(2).map((link) => (
+              {navLinks.filter((_, idx) => idx >= Math.ceil(navLinks.length / 2)).map((link) => (
                 <a
                   key={link.label}
                   href={link.href}

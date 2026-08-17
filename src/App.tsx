@@ -152,13 +152,70 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
   return { activeTab: 'groom', hasSelectedTeam: false, isAdmin: false };
 }
 
+/**
+ * Evaluates whether Pillars of Love (FamilyGrid) section is displayed:
+ * - Environment variable: VITE_SHOW_PILLARS_OF_LOVE or VITE_SHOW_FAMILY_SECTION
+ * - Default: false
+ * - Can be overridden in URL via ?pillars=true, ?family=true, or ?show_pillars=true
+ */
+function getShowPillarsOfLove(): boolean {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.get('pillars')?.toLowerCase() === 'true' ||
+      params.get('family')?.toLowerCase() === 'true' ||
+      params.get('show_pillars')?.toLowerCase() === 'true' ||
+      params.has('pillars')
+    ) {
+      return true;
+    }
+  }
+
+  const envVar = import.meta.env.VITE_SHOW_PILLARS_OF_LOVE || import.meta.env.VITE_SHOW_FAMILY_SECTION;
+  if (envVar !== undefined && envVar !== '') {
+    return String(envVar).toLowerCase() === 'true';
+  }
+
+  return false; // Default false as requested
+}
+
+/**
+ * Evaluates whether Visual Memories (GalleryGrid) section is displayed:
+ * - Environment variable: VITE_SHOW_VISUAL_MEMORIES or VITE_SHOW_GALLERY_SECTION
+ * - Default: false
+ * - Can be overridden in URL via ?memories=true, ?gallery=true, or ?show_memories=true
+ */
+function getShowVisualMemories(): boolean {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.get('memories')?.toLowerCase() === 'true' ||
+      params.get('gallery')?.toLowerCase() === 'true' ||
+      params.get('show_memories')?.toLowerCase() === 'true' ||
+      params.has('memories')
+    ) {
+      return true;
+    }
+  }
+
+  const envVar = import.meta.env.VITE_SHOW_VISUAL_MEMORIES || import.meta.env.VITE_SHOW_GALLERY_SECTION;
+  if (envVar !== undefined && envVar !== '') {
+    return String(envVar).toLowerCase() === 'true';
+  }
+
+  return false; // Default false as requested
+}
+
 export function App() {
   const initialRole = getInitialSideAndRole();
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialRole.activeTab);
   const [hasSelectedTeam, setHasSelectedTeam] = useState<boolean>(initialRole.hasSelectedTeam);
   const [isAdmin] = useState<boolean>(initialRole.isAdmin);
+  
   const isSaveTheDateMode = getSaveTheDateMode();
+  const showPillarsOfLove = getShowPillarsOfLove();
+  const showVisualMemories = getShowVisualMemories();
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
@@ -180,6 +237,8 @@ export function App() {
         <Navbar
           onReplaySplash={() => setShowSplash(true)}
           isSaveTheDateMode={isSaveTheDateMode}
+          showPillarsOfLove={showPillarsOfLove}
+          showVisualMemories={showVisualMemories}
         />
 
         {/* Main Content: Either Save The Date Landing View OR Full Interactive Wedding Site */}
@@ -201,11 +260,11 @@ export function App() {
                 isAdmin={isAdmin}
               />
 
-              {/* Family & Entourage Grid */}
-              <FamilyGrid activeTab={activeTab} />
+              {/* Family & Entourage Grid (Pillars of Love) - Controlled via env / URL parameter */}
+              {showPillarsOfLove && <FamilyGrid activeTab={activeTab} />}
 
-              {/* Bento Box Photo Gallery & Lightbox */}
-              <GalleryGrid activeTab={activeTab} />
+              {/* Bento Box Photo Gallery & Lightbox (Visual Memories) - Controlled via env / URL parameter */}
+              {showVisualMemories && <GalleryGrid activeTab={activeTab} />}
 
               {/* Virtual Guestbook & Blessings Wall */}
               <GuestbookSection />
