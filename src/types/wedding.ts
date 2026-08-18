@@ -16,6 +16,7 @@ export interface EventItem {
   image: string;
   category: 'bride' | 'groom' | 'together';
   description: string;
+  city?:string;
 }
 
 export interface PersonProfile {
