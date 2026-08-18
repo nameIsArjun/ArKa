@@ -19,7 +19,8 @@
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "groom",
-    "description": "Auspicious opening ceremony for the Groom's side with family blessings, Shagun distribution, and warm celebrations."
+    "description": "Auspicious opening ceremony for the Groom's side with family blessings, Shagun distribution, and warm celebrations.",
+    "city":"Jammu"
   },
   {
     "id": "sangeet-bride",
@@ -41,7 +42,8 @@
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "bride",
-    "description": "An enchanting evening of family dance performances, DJ beats, crystal chandeliers, and lavish culinary feast."
+    "description": "An enchanting evening of family dance performances, DJ beats, crystal chandeliers, and lavish culinary feast.",
+    "city":"Bathinda"
   },
   {
     "id": "satsang-groom",
@@ -63,7 +65,8 @@
     ],
     "image": "/images/event_haldi.jpg",
     "category": "groom",
-    "description": "Holy Kirtan and divine Satsang to seek eternal blessings for Arjun & Kanishka's lifelong union."
+    "description": "Holy Kirtan and divine Satsang to seek eternal blessings for Arjun & Kanishka's lifelong union.",
+    "city":"Jammu"
   },
   {
     "id": "mehndi-bride",
@@ -85,7 +88,8 @@
     ],
     "image": "/images/event_mehndi.jpg",
     "category": "bride",
-    "description": "Lush marigold decor, live henna artisans, traditional folk dholak beats, and cooling sherbets."
+    "description": "Lush marigold decor, live henna artisans, traditional folk dholak beats, and cooling sherbets.",
+    "city":"Bathinda"
   },
   {
     "id": "engagement",
@@ -107,7 +111,8 @@
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "together",
-    "description": "An enchanting evening of ring exchanges, auspicious Shagun rituals, family performances, DJ beats, and grand feast."
+    "description": "An enchanting evening of ring exchanges, auspicious Shagun rituals, family performances, DJ beats, and grand feast.",
+    "city":"Jammu"
   },
   {
     "id": "haldi",
@@ -129,7 +134,8 @@
     ],
     "image": "/images/event_haldi.jpg",
     "category": "together",
-    "description": "A vibrant joint morning celebration for both Kanishka & Arjun filled with turmeric paste, rose petals, music, and laughter."
+    "description": "A vibrant joint morning celebration for both Kanishka & Arjun filled with turmeric paste, rose petals, music, and laughter.",
+    "city":"Jammu"
   },
   {
     "id": "sehra-bandi-groom",
@@ -151,7 +157,8 @@
     ],
     "image": "/images/groom_portrait.jpg",
     "category": "groom",
-    "description": "Traditional ceremony of tying the royal golden Sehra for Arjun Puri by elders and family, prior to the grand Baraat procession."
+    "description": "Traditional ceremony of tying the royal golden Sehra for Arjun Puri by elders and family, prior to the grand Baraat procession.",
+    "city":"Jammu"
   },
   {
     "id": "wedding",
@@ -173,6 +180,7 @@
     ],
     "image": "/images/hero_couple.jpg",
     "category": "together",
-    "description": "The grand Baraat procession followed by Vedic wedding vows and sacred 7 Pheras around the holy agni fire."
+    "description": "The grand Baraat procession followed by Vedic wedding vows and sacred 7 Pheras around the holy agni fire.",
+    "city":"Jammu"
   }
 ]
