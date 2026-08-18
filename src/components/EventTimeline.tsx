@@ -24,11 +24,12 @@ interface EventTimelineProps {
 
 // Map each eventId to its custom artwork illustration
 function getEventArtwork(eventId: string): string {
+  if (eventId.includes('engagement')) return getAssetUrl('/images/art/art_engagement.jpg');
   if (eventId.includes('shagun')) return getAssetUrl('/images/art/art_shagun.jpg');
   if (eventId.includes('satsang')) return getAssetUrl('/images/art/art_satsang.jpg');
   if (eventId.includes('sehra')) return getAssetUrl('/images/art/art_sehra.jpg');
   if (eventId.includes('haldi') || eventId.includes('sant')) return getAssetUrl('/images/art/art_haldi.jpg');
-  if (eventId.includes('engagement') || eventId.includes('sangeet')) return getAssetUrl('/images/art/art_sangeet.jpg');
+  if (eventId.includes('sangeet')) return getAssetUrl('/images/art/art_sangeet.jpg');
   if (eventId.includes('mehndi')) return getAssetUrl('/images/art/art_mehndi.jpg');
   return getAssetUrl('/images/art/art_vivah.jpg');
 }
