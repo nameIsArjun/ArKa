@@ -41,8 +41,7 @@ function getEventShortTitle(evt: EventItem): string {
   if (evt.id.includes('satsang')) return 'Divine Satsang';
   if (evt.id.includes('sangeet')) return 'Shagun & Sangeet';
   if (evt.id.includes('engagement')) return 'Engagement & Tikka';
-  if (evt.id.includes('sant')) return 'Sant Ritual';
-  if (evt.id.includes('haldi')) return 'Pitambari Haldi';
+  if (evt.id.includes('sant')|| evt.id.includes('haldi')) return 'Sant Ritual';
   if (evt.id.includes('sehra')) return 'Sehra Bandi';
   if (evt.id.includes('vivah') || evt.id.includes('wedding')) return 'Shubh Vivah';
   if (evt.id.includes('mehndi')) return 'Mehndi Night';
