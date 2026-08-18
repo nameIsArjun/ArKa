@@ -628,6 +628,7 @@ END:VCALENDAR`;
                 <span className="font-serif text-lg font-bold text-[#0A4A40] z-10 mt-2">
                   {selectedMapEvent.location}
                 </span>
+                <span className="text-xs text-[#008070] font-semibold z-10"> {selectedMapEvent?.city}/span>
               </div>
 
               <div className="flex items-center justify-between gap-3">
