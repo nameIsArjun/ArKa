@@ -9,12 +9,11 @@ import { EventBackgroundAnimation } from './EventBackgroundAnimation';
 
 // Swiper React Components & Modules
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectFade, Keyboard } from 'swiper/modules';
+import { Keyboard } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 
 // Swiper Styles
 import 'swiper/css';
-import 'swiper/css/effect-fade';
 
 interface EventTimelineProps {
   activeTab: ActiveTab;
@@ -29,19 +28,18 @@ function getEventArtwork(eventId: string): string {
   if (eventId.includes('satsang')) return getAssetUrl('/images/art/art_satsang.jpg');
   if (eventId.includes('sehra')) return getAssetUrl('/images/art/art_sehra.jpg');
   if (eventId.includes('haldi') || eventId.includes('sant')) return getAssetUrl('/images/art/art_haldi.jpg');
-  if (eventId.includes('engagement')) return getAssetUrl('/images/art/art_engagement.jpg');
+  if (eventId.includes('engagement') || eventId.includes('sangeet')) return getAssetUrl('/images/art/art_sangeet.jpg');
   if (eventId.includes('mehndi')) return getAssetUrl('/images/art/art_mehndi.jpg');
-  if (eventId.includes('sangeet')) return getAssetUrl('/images/art/art_sangeet.jpg');
   return getAssetUrl('/images/art/art_vivah.jpg');
 }
 
 // Helper for short concise event titles on sidebar tiles
 function getEventShortTitle(evt: EventItem): string {
+  if (evt.id === 'engagement') return 'Engagement & Tikka';
   if (evt.id.includes('shagun')) return 'Khule Shagun';
   if (evt.id.includes('satsang')) return 'Divine Satsang';
-  if (evt.id.includes('sangeet')) return 'Shagun & Sangeet';
-  if (evt.id.includes('engagement')) return 'Engagement & Tikka';
-  if (evt.id.includes('sant')|| evt.id.includes('haldi')) return 'Sant Ritual';
+  if (evt.id.includes('sangeet')) return 'Jashn-e-Sangeet';
+  if (evt.id.includes('sant') || evt.id.includes('haldi')) return 'Sant Ritual';
   if (evt.id.includes('sehra')) return 'Sehra Bandi';
   if (evt.id.includes('vivah') || evt.id.includes('wedding')) return 'Shubh Vivah';
   if (evt.id.includes('mehndi')) return 'Mehndi Night';
@@ -134,7 +132,7 @@ END:VCALENDAR`;
   return (
     <section id="itinerary" className="py-16 px-4 max-w-6xl mx-auto relative">
       {/* Section Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#008070] font-semibold mb-2">
           <Sparkles size={14} className="text-[#B38728]" />
           <span>Royal Itinerary</span>
@@ -150,9 +148,9 @@ END:VCALENDAR`;
         <OrnamentalDivider className="max-w-md mx-auto" />
       </div>
 
-      {/* Active Side Header Banner (shown after selection to switch side anytime) */}
+      {/* Active Side Header Banner */}
       {hasSelectedTeam && (
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4AF37]/50 shadow-md max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4AF37]/50 shadow-md max-w-5xl mx-auto">
           <div className="flex items-center gap-2">
             <span className="text-xl">
               {activeTab === 'bride' ? '👰' : '🤵'}
@@ -209,7 +207,7 @@ END:VCALENDAR`;
           </div>
         </div>
       ) : (
-        /* SWIPER DRIVEN ROYAL ITINERARY STAGE */
+        /* INTERACTIVE CARD SLIDER STAGE ONLY */
         <div className="space-y-6">
 
           {/* MOBILE ONLY: HORIZONTAL INSTAGRAM STORY BAR */}
@@ -331,13 +329,13 @@ END:VCALENDAR`;
             {/* RIGHT FIXED STAGE AREA WITH SWIPER TOUCH PHYSICS */}
             <div className="lg:col-span-8 relative h-[640px] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
 
-              {/* SWIPER CONTAINER */}
+              {/* SWIPER CONTAINER WITH MOBILE HORIZONTAL SWIPING */}
               <Swiper
+                direction="horizontal"
+                touchReleaseOnEdges={true}
                 onSwiper={(swiper) => (swiperRef.current = swiper)}
                 onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
-                modules={[EffectFade, Keyboard]}
-                effect="fade"
-                fadeEffect={{ crossFade: true }}
+                modules={[Keyboard]}
                 keyboard={{ enabled: true }}
                 grabCursor={true}
                 className="w-full h-full"
@@ -369,12 +367,12 @@ END:VCALENDAR`;
                           {idx + 1} of {filteredEvents.length}
                         </div>
 
-                        {/* ARTWORK CENTER LEFT FLOATING PREVIOUS ARROW */}
+                        {/* ARTWORK CENTER LEFT FLOATING PREVIOUS ARROW (MOBILE ONLY) */}
                         <button
                           disabled={activeIndex === 0}
                           onClick={handlePrev}
                           aria-label="Previous Event"
-                          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === 0
+                          className={`lg:hidden absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === 0
                             ? 'opacity-30 cursor-not-allowed text-gray-400'
                             : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
                             }`}
@@ -382,12 +380,12 @@ END:VCALENDAR`;
                           <ChevronLeft size={20} />
                         </button>
 
-                        {/* ARTWORK CENTER RIGHT FLOATING NEXT ARROW */}
+                        {/* ARTWORK CENTER RIGHT FLOATING NEXT ARROW (MOBILE ONLY) */}
                         <button
                           disabled={activeIndex === filteredEvents.length - 1}
                           onClick={handleNext}
                           aria-label="Next Event"
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === filteredEvents.length - 1
+                          className={`lg:hidden absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === filteredEvents.length - 1
                             ? 'opacity-30 cursor-not-allowed text-gray-400'
                             : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
                             }`}
@@ -482,6 +480,37 @@ END:VCALENDAR`;
                 ))}
               </Swiper>
 
+            </div>
+
+            {/* OUTSIDE CARD SENIOR-FRIENDLY PREVIOUS & NEXT EVENT NAVIGATION BAR (MOBILE ONLY) */}
+            <div className="mt-4 flex lg:hidden items-center justify-between gap-3 p-3 bg-[#FFFDF9] border-2 border-[#D4AF37]/60 rounded-2xl shadow-lg">
+              <button
+                disabled={activeIndex === 0}
+                onClick={handlePrev}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-serif font-extrabold text-xs transition-all cursor-pointer shadow-sm ${activeIndex === 0
+                  ? 'opacity-30 cursor-not-allowed bg-[#FAF6F0] text-gray-400 border border-gray-300'
+                  : 'bg-[#FAF6F0] hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white border border-[#D4AF37] active:scale-95'
+                  }`}
+              >
+                <ChevronLeft size={16} />
+                <span>Previous Event</span>
+              </button>
+
+              <span className="text-xs font-serif font-extrabold text-[#0A4A40] select-none bg-[#FAF6F0] px-3 py-1 rounded-full border border-[#D4AF37]/40">
+                {activeIndex + 1} of {filteredEvents.length}
+              </span>
+
+              <button
+                disabled={activeIndex === filteredEvents.length - 1}
+                onClick={handleNext}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-serif font-extrabold text-xs transition-all cursor-pointer shadow-md ${activeIndex === filteredEvents.length - 1
+                  ? 'opacity-30 cursor-not-allowed bg-gray-200 text-gray-400 border border-gray-300'
+                  : 'bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] hover:brightness-105 active:scale-95'
+                  }`}
+              >
+                <span>Next Event</span>
+                <ChevronRight size={16} />
+              </button>
             </div>
 
           </div>
@@ -627,7 +656,7 @@ END:VCALENDAR`;
                 <span className="font-serif text-lg font-bold text-[#0A4A40] z-10 mt-2">
                   {selectedMapEvent.location}
                 </span>
-                <span className="text-xs text-[#008070] font-semibold z-10"> {selectedMapEvent?.city}</span>
+                <span className="text-xs text-[#008070] font-semibold z-10">Jammu & Bathinda</span>
               </div>
 
               <div className="flex items-center justify-between gap-3">

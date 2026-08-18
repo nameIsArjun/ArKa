@@ -20,7 +20,7 @@
     "image": "/images/event_sangeet.jpg",
     "category": "groom",
     "description": "Auspicious opening ceremony for the Groom's side with family blessings, Shagun distribution, and warm celebrations.",
-    "city":"Jammu"
+    "city": "Jammu"
   },
   {
     "id": "sangeet-bride",
@@ -32,18 +32,18 @@
     "venueName": "Hotel Sapphire, Bathinda",
     "address": "Barnala Bypass, Basant Vihar, Chandsar Basti, Bathinda 151001",
     "googleMapsUrl": "https://maps.google.com/?q=Hotel+Sapphire+Barnala+Bypass+Bathinda",
-    "dressCode": "Velvet, Mirrors & Royal Glamour",
-    "dressCodeDescription": "Deep emerald, royal blue, and burnished gold Indo-Western suits and shimmering lehengas.",
+    "dressCode": "Vibrant Punjabi Ethnic & Sangeet Glamour",
+    "dressCodeDescription": "Festive Punjabi suits, Phulkari accents, vibrant Kurta Pajamas, and embellished Sangeet lehengas with royal mirror work.",
     "dressCodeColors": [
       "#0A4A40",
-      "#008070",
       "#D4AF37",
-      "#1A1A1A"
+      "#CC2B52",
+      "#E5A93B"
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "bride",
     "description": "An enchanting evening of family dance performances, DJ beats, crystal chandeliers, and lavish culinary feast.",
-    "city":"Bathinda"
+    "city": "Bathinda"
   },
   {
     "id": "satsang-groom",
@@ -66,7 +66,7 @@
     "image": "/images/event_haldi.jpg",
     "category": "groom",
     "description": "Holy Kirtan and divine Satsang to seek eternal blessings for Arjun & Kanishka's lifelong union.",
-    "city":"Jammu"
+    "city": "Jammu"
   },
   {
     "id": "mehndi-bride",
@@ -78,22 +78,22 @@
     "venueName": "Sheesh Mahal Heights, Bathinda",
     "address": "Flat No 302, Block-2, Sheesh Mahal Heights, Dabwali Road, Bathinda 151001",
     "googleMapsUrl": "https://maps.google.com/?q=Sheesh+Mahal+Heights+Dabwali+Road+Bathinda",
-    "dressCode": "Floral Vibrant / Pastel Ethnic",
-    "dressCodeDescription": "Embrace sunny yellow, mint green, and blush pink silks adorned with marigold accents.",
+    "dressCode": "Deep Henna Green & Bright Festive Colors",
+    "dressCodeDescription": "Rich & vibrant festive hues — deep emerald & henna green paired with bright mustard yellow, hot rani pink, and marigold orange.",
     "dressCodeColors": [
+      "#0A4A40",
+      "#2E5A1C",
       "#FFD700",
-      "#008070",
-      "#FF69B4",
-      "#FFFDF9"
+      "#FF1493"
     ],
     "image": "/images/event_mehndi.jpg",
     "category": "bride",
     "description": "Lush marigold decor, live henna artisans, traditional folk dholak beats, and cooling sherbets.",
-    "city":"Bathinda"
+    "city": "Bathinda"
   },
   {
     "id": "engagement",
-    "title": "Engagement & Shagun ",
+    "title": "Engagement & Tikka ",
     "subtitle": "Rings & Blessing Ceremony",
     "date": "Wednesday, November 11, 2026",
     "time": "6:00 PM Onwards",
@@ -101,18 +101,18 @@
     "venueName": "Anutham Hotel & Resort, Jammu",
     "address": "Bypass Kunjwani, Opposite Audi Showroom, Jammu, J&K 180010",
     "googleMapsUrl": "https://maps.google.com/?q=Anutham+Hotel+Resort+Kunjwani+Jammu",
-    "dressCode": "Formal Ethnic / Indo-Western Couture",
-    "dressCodeDescription": "Sophisticated evening wear, embellished sherwanis, and cocktail lehengas.",
+    "dressCode": "Indo-Western, Formal Suits & Cocktail Glamour",
+    "dressCodeDescription": "Black-tie Tuxedos, Tailored Suits, Chic Indo-Western Jodhpuris, and Glamorous Cocktail Gowns & Embellished Lehengas.",
     "dressCodeColors": [
       "#0A4A40",
       "#D4AF37",
-      "#B38728",
-      "#FFFDF9"
+      "#1E293B",
+      "#C0C0C0"
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "together",
-    "description": "An enchanting evening of ring exchanges, auspicious Shagun rituals, family performances, DJ beats, and grand feast.",
-    "city":"Jammu"
+    "description": "An enchanting evening of ring exchanges, auspicious tikka rituals, family performances, DJ beats, and grand feast.",
+    "city": "Jammu"
   },
   {
     "id": "haldi",
@@ -135,7 +135,7 @@
     "image": "/images/event_haldi.jpg",
     "category": "together",
     "description": "A vibrant joint morning celebration for both Kanishka & Arjun filled with turmeric paste, rose petals, music, and laughter.",
-    "city":"Jammu"
+    "city": "Jammu"
   },
   {
     "id": "sehra-bandi-groom",
@@ -158,20 +158,20 @@
     "image": "/images/groom_portrait.jpg",
     "category": "groom",
     "description": "Traditional ceremony of tying the royal golden Sehra for Arjun Puri by elders and family, prior to the grand Baraat procession.",
-    "city":"Jammu"
+    "city": "Jammu"
   },
   {
     "id": "wedding",
     "title": "Shubh Vivah & Royal Baraat",
     "subtitle": "The Sacred Pheras Ceremony",
     "date": "Thursday, November 12, 2026",
-    "time": "5:00 PM – Late Night",
+    "time": "7:00 PM – Late Night",
     "location": "Royal Banquet Hall & Mandap",
     "venueName": "Anutham Hotel & Resort, Jammu",
     "address": "Bypass Kunjwani, Opposite Audi Showroom, Jammu, J&K 180010",
     "googleMapsUrl": "https://maps.google.com/?q=Anutham+Hotel+Resort+Kunjwani+Jammu",
     "dressCode": "Regal Indian Traditional Formal",
-    "dressCodeDescription": "Royal Bandhgala suits, Turbans (Safas), and rich Banarasi & Kanjeevaram silk lehengas.",
+    "dressCodeDescription": "Regal Bandhgala suits, Royal Turbans (Safas), and elegant Indian traditional formal wear.",
     "dressCodeColors": [
       "#0A4A40",
       "#D4AF37",
@@ -181,6 +181,6 @@
     "image": "/images/hero_couple.jpg",
     "category": "together",
     "description": "The grand Baraat procession followed by Vedic wedding vows and sacred 7 Pheras around the holy agni fire.",
-    "city":"Jammu"
+    "city": "Jammu"
   }
 ]
