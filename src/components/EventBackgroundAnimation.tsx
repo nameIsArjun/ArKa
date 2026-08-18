@@ -14,7 +14,7 @@ export const EventBackgroundAnimation: React.FC<EventBackgroundAnimationProps> =
 }) => {
   if (!isInView) return null;
 
-  // 1. Pitambari Haldi Ceremony: Turmeric Shower & Yellow Petals
+  // 1. Pitambari Saant Ceremony: Turmeric Shower & Yellow Petals
   if (eventId.includes('haldi')) {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl z-0 opacity-40">
