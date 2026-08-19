@@ -12,23 +12,49 @@ import { GuestbookSection } from './components/GuestbookSection';
 import { Footer } from './components/Footer';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
 
+const COOKIE_KEY = 'arka_wedding_guest_side';
 const STORAGE_KEY = 'arka_wedding_guest_side_v1';
-const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+
+function setCookie(name: string, value: string, days: number = 30) {
+  if (typeof document === 'undefined') return;
+  try {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+  } catch (e) {
+    console.error('Error setting cookie:', e);
+  }
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  try {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return decodeURIComponent(match[2]);
+  } catch (e) {
+    console.error('Error reading cookie:', e);
+  }
+  return null;
+}
 
 /**
- * Checks localStorage for a valid saved guest side selection within the last 24 hours
+ * Checks Cookies and localStorage for a saved guest side selection
  */
 function getSavedSide(): ActiveTab | null {
   if (typeof window === 'undefined') return null;
+
+  // 1. Check Cookie first
+  const cookieVal = getCookie(COOKIE_KEY)?.toLowerCase();
+  if (cookieVal === 'bride' || cookieVal === 'groom') {
+    return cookieVal as ActiveTab;
+  }
+
+  // 2. Fallback to LocalStorage
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.side && parsed.timestamp) {
-      if (Date.now() - parsed.timestamp < EXPIRY_MS) {
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.side && (parsed.side === 'bride' || parsed.side === 'groom')) {
         return parsed.side as ActiveTab;
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
       }
     }
   } catch (e) {
@@ -38,10 +64,11 @@ function getSavedSide(): ActiveTab | null {
 }
 
 /**
- * Saves guest side selection to localStorage with timestamp for 24-hour persistence
+ * Saves guest side selection to Cookie and LocalStorage
  */
 function saveSideToLocalStorage(side: ActiveTab) {
   if (typeof window === 'undefined') return;
+  setCookie(COOKIE_KEY, side, 30);
   try {
     localStorage.setItem(
       STORAGE_KEY,
@@ -49,6 +76,30 @@ function saveSideToLocalStorage(side: ActiveTab) {
     );
   } catch (e) {
     console.error('Error saving side preference:', e);
+  }
+}
+
+/**
+ * Strips side/bride/groom parameters from the URL bar cleanly using history.replaceState
+ */
+function cleanSideFromUrl() {
+  if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+  try {
+    const url = new URL(window.location.href);
+    let modified = false;
+
+    if (url.searchParams.has('side')) { url.searchParams.delete('side'); modified = true; }
+    if (url.searchParams.has('role')) { url.searchParams.delete('role'); modified = true; }
+    if (url.searchParams.has('bride')) { url.searchParams.delete('bride'); modified = true; }
+    if (url.searchParams.has('groom')) { url.searchParams.delete('groom'); modified = true; }
+
+    if (modified) {
+      const newSearch = url.searchParams.toString();
+      const cleanUrl = url.pathname + (newSearch ? `?${newSearch}` : '') + url.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  } catch (e) {
+    console.error('Error cleaning URL search params:', e);
   }
 }
 
@@ -98,12 +149,12 @@ function getSaveTheDateMode(): boolean {
 }
 
 /**
- * Role & Side Selection Evaluation with 24-Hour Memory:
- * - ?side=groom / ?groom=true -> Pre-select Groom side, save for 24h, skip popup modal
- * - ?side=bride / ?bride=true -> Pre-select Bride side, save for 24h, skip popup modal
+ * Role & Side Selection Evaluation with Cookie & LocalStorage Memory:
+ * - ?side=groom / ?groom=true -> Pre-select Groom side, save in cookie, clean URL, skip modal
+ * - ?side=bride / ?bride=true -> Pre-select Bride side, save in cookie, clean URL, skip modal
  * - ?admin=true / ?side=admin -> Admin mode enabled (Switch Side button shown)
- * - Direct link without filters (http://localhost:5173/ or ?mode=full):
- *   -> Checks 24-hour localStorage cache! If cached, loads saved side. If new/expired, asks guest!
+ * - Direct link without filters (http://localhost:5173/):
+ *   -> Checks Cookie / LocalStorage cache! If cached, loads saved side. If new, asks guest!
  */
 function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boolean; isAdmin: boolean } {
   if (typeof window === 'undefined') {
@@ -127,28 +178,31 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
   // 1. Admin link: enables admin mode with switch side button
   if (isAdminParam || envTrack === 'admin') {
     const tab: ActiveTab = isBrideParam ? 'bride' : 'groom';
+    cleanSideFromUrl();
     return { activeTab: tab, hasSelectedTeam: true, isAdmin: true };
   }
 
-  // 2. Explicit Bride link: pre-selects Bride side & saves for 24h
+  // 2. Explicit Bride link: pre-selects Bride side, saves in cookie & strips ?side=bride from URL
   if (isBrideParam || envTrack === 'bride') {
     saveSideToLocalStorage('bride');
+    cleanSideFromUrl();
     return { activeTab: 'bride', hasSelectedTeam: true, isAdmin: false };
   }
 
-  // 3. Explicit Groom link: pre-selects Groom side & saves for 24h
+  // 3. Explicit Groom link: pre-selects Groom side, saves in cookie & strips ?side=groom from URL
   if (isGroomParam || envTrack === 'groom') {
     saveSideToLocalStorage('groom');
+    cleanSideFromUrl();
     return { activeTab: 'groom', hasSelectedTeam: true, isAdmin: false };
   }
 
-  // 4. Direct link without filters: Check 24-hour saved preference!
+  // 4. Direct link without filters: Check Cookie / LocalStorage saved preference!
   const savedSide = getSavedSide();
   if (savedSide) {
     return { activeTab: savedSide, hasSelectedTeam: true, isAdmin: false };
   }
 
-  // 5. First-time or expired direct entry: ask guest which side!
+  // 5. First-time or direct entry: ask guest which side!
   return { activeTab: 'groom', hasSelectedTeam: false, isAdmin: false };
 }
 

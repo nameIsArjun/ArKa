@@ -3,7 +3,6 @@ import { MonogramLogo } from './MonogramLogo';
 import { Menu, X, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WEDDING_DETAILS } from '../data/weddingData';
-import { AudioPlayer } from './AudioPlayer';
 
 interface NavbarProps {
   onReplaySplash: () => void;
@@ -109,9 +108,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               ))}
             </nav>
           )}
-
-          {/* Soothing Background Audio Player Toggle */}
-          <AudioPlayer />
 
           {/* Replay Intro Button */}
           <button

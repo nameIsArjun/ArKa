@@ -551,69 +551,72 @@ END:VCALENDAR`;
                 Select your side to unlock your family's rituals & grand wedding celebrations!
               </p>
 
-              {/* Horizontal 2 Cards Grid: Strictly Bride or Groom */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 text-left">
-
-                {/* Dulhan (Bride) Card */}
+              {/* 2-Column Vertical Split Row (Side-by-Side on both Mobile & Desktop) */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-6 mt-6 text-left relative">
+                
+                {/* Dulhan (Bride) Card - Left Column */}
                 <div
                   onClick={() => handleSelectTeam('bride')}
-                  className="bg-[#FAF6F0] border-2 border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-3xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
+                  className="bg-[#FAF6F0] border-2 border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-3xl p-3 sm:p-5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
                 >
-                  <div className="relative h-52 sm:h-60 rounded-2xl overflow-hidden mb-4 border border-[#D4AF37]/40 shadow-sm bg-[#FFFDF9] flex items-center justify-center p-2">
+                  {/* Full Edge-to-Edge Poster Artwork Background */}
+                  <div className="relative h-44 sm:h-64 -mx-3 -mt-3 sm:-mx-5 sm:-mt-5 mb-3 border-b-2 border-[#D4AF37]/40 overflow-hidden bg-[#FFFDF9]">
                     <img
                       src={getAssetUrl('/images/art/card_dulhan.jpg')}
                       alt="Dulhan Bride Art"
-                      className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/80 via-transparent to-transparent pointer-events-none" />
-                    <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-sm z-10">
-                      👰 Dulhan Side
+                    <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-[9px] sm:text-xs font-serif font-extrabold shadow-sm z-10">
+                      👰 Kanishka's Side
                     </span>
                   </div>
 
-                  <div>
-                    <h4 className="font-serif font-extrabold text-lg text-[#0A4A40]">
-                      Team Bride (Kanishka's Guest)
-                    </h4>
-                    <p className="text-xs text-[#008070] font-medium mt-1">
-                      Haldi • Mehndi • Sangeet • Main Wedding
-                    </p>
-                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 className="font-serif font-extrabold text-xs sm:text-lg text-[#0A4A40] leading-snug">
+                        Team Bride
+                      </h4>
+                    </div>
 
-                  <button className="mt-4 w-full py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md group-hover:brightness-105 transition-all text-center cursor-pointer">
-                    Celebrate with Team Bride
-                  </button>
+                    <button className="mt-3 w-full py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-[10px] sm:text-xs uppercase tracking-wider shadow-md group-hover:brightness-105 transition-all text-center cursor-pointer">
+                      Select Side ➔
+                    </button>
+                  </div>
                 </div>
 
-                {/* Dulhe Raja (Groom) Card */}
+                {/* Central Vertical Split Divider Line */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-4/5 border-l-2 border-dashed border-[#D4AF37]/50 pointer-events-none z-20 hidden sm:block" />
+
+                {/* Dulhe Raja (Groom) Card - Right Column */}
                 <div
                   onClick={() => handleSelectTeam('groom')}
-                  className="bg-[#FAF6F0] border-2 border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-3xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
+                  className="bg-[#FAF6F0] border-2 border-[#D4AF37]/60 hover:border-[#D4AF37] rounded-3xl p-3 sm:p-5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
                 >
-                  <div className="relative h-52 sm:h-60 rounded-2xl overflow-hidden mb-4 border border-[#D4AF37]/40 shadow-sm bg-[#FFFDF9] flex items-center justify-center p-2">
+                  {/* Full Edge-to-Edge Poster Artwork Background */}
+                  <div className="relative h-44 sm:h-64 -mx-3 -mt-3 sm:-mx-5 sm:-mt-5 mb-3 border-b-2 border-[#D4AF37]/40 overflow-hidden bg-[#FFFDF9]">
                     <img
                       src={getAssetUrl('/images/art/card_groom.jpg')}
                       alt="Dulhe Raja Groom Art"
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/80 via-transparent to-transparent pointer-events-none" />
-                    <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-sm z-10">
-                      🤵 Groom Side
+                    <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-[9px] sm:text-xs font-serif font-extrabold shadow-sm z-10">
+                      🤵 Arjun's Side
                     </span>
                   </div>
 
-                  <div>
-                    <h4 className="font-serif font-extrabold text-lg text-[#0A4A40]">
-                      Team Groom (Arjun's Guest)
-                    </h4>
-                    <p className="text-xs text-[#008070] font-medium mt-1">
-                      Shagun • Satsang • Sehra Bandi • Main Wedding
-                    </p>
-                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 className="font-serif font-extrabold text-xs sm:text-lg text-[#0A4A40] leading-snug">
+                        Team Groom
+                      </h4>
+                    </div>
 
-                  <button className="mt-4 w-full py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md group-hover:brightness-105 transition-all text-center cursor-pointer">
-                    Celebrate with Team Groom
-                  </button>
+                    <button className="mt-3 w-full py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-[10px] sm:text-xs uppercase tracking-wider shadow-md group-hover:brightness-105 transition-all text-center cursor-pointer">
+                      Select Side ➔
+                    </button>
+                  </div>
                 </div>
 
               </div>
