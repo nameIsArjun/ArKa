@@ -34,32 +34,41 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const uploadFileToWebhook = (file: File): Promise<void> => {
+  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+  const uploadFileToWebhook = (file: File, retries: number = 3): Promise<void> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async () => {
-        try {
-          const resultStr = reader.result as string;
-          const base64Data = resultStr.split(',')[1];
-          const payload = {
-            filename: file.name,
-            mimeType: file.type || 'image/jpeg',
-            base64: base64Data,
-          };
+        const resultStr = reader.result as string;
+        const base64Data = resultStr.split(',')[1];
+        const payload = {
+          filename: file.name,
+          mimeType: file.type || 'image/jpeg',
+          base64: base64Data,
+        };
 
-          await fetch(webhookUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          });
-
-          resolve();
-        } catch (err) {
-          console.error('Upload error:', err);
-          reject(err);
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            await fetch(webhookUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(payload),
+            });
+            resolve();
+            return;
+          } catch (err) {
+            console.warn(`Upload attempt ${attempt} failed for ${file.name}:`, err);
+            if (attempt === retries) {
+              reject(err);
+              return;
+            }
+            // Exponential backoff delay (1s, 2s, 4s)
+            await delay(1000 * Math.pow(2, attempt - 1));
+          }
         }
       };
       reader.onerror = (error) => reject(error);
@@ -77,10 +86,14 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
       setCurrentFileIdx(i + 1);
       const file = selectedFiles[i];
       try {
-        await uploadFileToWebhook(file);
+        await uploadFileToWebhook(file, 3);
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
+        // 300ms staggered delay between files to prevent Google rate limit spikes
+        if (i < selectedFiles.length - 1) {
+          await delay(300);
+        }
       } catch (e) {
-        console.error('Failed file:', file.name, e);
+        console.error('Failed file after retries:', file.name, e);
       }
     }
 
