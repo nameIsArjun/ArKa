@@ -408,6 +408,8 @@ export function App() {
         <Footer />
       </>
     )}
+        {/* Vercel Web Analytics */}
+        <Analytics />
       </div>
       <Analytics />
     </LayoutGroup>
