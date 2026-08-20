@@ -64,42 +64,73 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const uploadFileToVercel = async (file: File, retries: number = 3): Promise<void> => {
-    // For files > 2.5 MB (large iPhone photos & videos), use Resumable Direct Streaming (0 Vercel 4.5MB limit, 0 CORS error!)
+    // For files > 2.5 MB (iPhone photos & MOV/MP4 videos), use server-proxied chunked stream!
     const isLargeFile = file.size > 2.5 * 1024 * 1024;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         if (isLargeFile) {
-          const apiRes = await fetch('/api/upload', {
+          // Step 1: Start Resumable Session on Google Drive via /api/upload
+          const startRes = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              action: 'start',
               filename: file.name,
               mimeType: file.type || 'application/octet-stream',
-              isResumable: true,
             }),
           });
 
-          if (apiRes.ok) {
-            const data = await apiRes.json();
-            if (data.uploadUrl && data.accessToken) {
-              const uploadRes = await fetch(data.uploadUrl, {
-                method: 'PUT',
-                headers: {
-                  'Authorization': `Bearer ${data.accessToken}`,
-                  'Content-Type': file.type || 'application/octet-stream',
-                },
-                body: file,
-              });
-
-              if (uploadRes.ok || uploadRes.status === 200 || uploadRes.status === 201) {
-                return;
-              }
-            }
+          if (!startRes.ok) {
+            const errData = await startRes.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${startRes.status}`);
           }
-          const errData = await apiRes.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${apiRes.status}`);
+
+          const { uploadUrl } = await startRes.json();
+          if (!uploadUrl) throw new Error('No uploadUrl returned from server');
+
+          // Step 2: Upload 2.5 MB chunks through /api/upload proxy (0 CORS errors, 0 Vercel 4.5MB limits!)
+          const CHUNK_SIZE = 2.5 * 1024 * 1024; // 2.5 MB per chunk
+          const totalSize = file.size;
+          let offset = 0;
+
+          while (offset < totalSize) {
+            const end = Math.min(offset + CHUNK_SIZE, totalSize);
+            const blobChunk = file.slice(offset, end);
+
+            const chunkBase64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result as string;
+                resolve(result.split(',')[1]);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(blobChunk);
+            });
+
+            const contentRange = `bytes ${offset}-${end - 1}/${totalSize}`;
+            const chunkRes = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'chunk',
+                uploadUrl,
+                chunkBase64,
+                contentRange,
+                mimeType: file.type || 'application/octet-stream',
+              }),
+            });
+
+            if (!chunkRes.ok) {
+              const errData = await chunkRes.json().catch(() => ({}));
+              throw new Error(errData.error || `Chunk HTTP ${chunkRes.status}`);
+            }
+
+            offset = end;
+          }
+          return;
         } else {
+          // Direct Base64 upload for smaller photos (< 2.5 MB)
           const base64Data = await getFileBase64(file);
           const apiRes = await fetch('/api/upload', {
             method: 'POST',
@@ -293,19 +324,24 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                       </button>
                     </div>
 
-                    <div className="max-h-28 overflow-y-auto space-y-1 pr-1">
+                    <div className="max-h-32 overflow-y-auto space-y-1.5 pr-1">
                       {selectedFiles.map((file, idx) => (
                         <div
                           key={`${file.name}-${idx}`}
-                          className="flex items-center justify-between text-[11px] p-1.5 rounded-lg bg-[#FAF6F0] border border-[#D4AF37]/30 text-[#2D3748]"
+                          className="flex items-center justify-between text-[11px] p-2 rounded-lg bg-[#FAF6F0] border border-[#D4AF37]/30 text-[#2D3748] gap-1.5"
                         >
-                          <span className="truncate max-w-[170px] font-medium">{file.name}</span>
-                          <button
-                            onClick={() => removeFile(idx)}
-                            className="text-gray-500 hover:text-red-600 p-0.5 cursor-pointer"
-                          >
-                            <X size={12} />
-                          </button>
+                          <span className="truncate max-w-[140px] sm:max-w-[180px] font-medium">{file.name}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[10px] text-[#8C641D] font-mono">
+                              {(file.size / (1024 * 1024)).toFixed(1)} MB
+                            </span>
+                            <button
+                              onClick={() => removeFile(idx)}
+                              className="text-gray-500 hover:text-red-600 p-0.5 cursor-pointer rounded-full hover:bg-red-50"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -317,9 +353,9 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                           <span>Uploading {currentFileIdx}/{selectedFiles.length}...</span>
                           <span>{uploadProgress}%</span>
                         </div>
-                        <div className="w-full h-1.5 rounded-full bg-[#F4EDE2] overflow-hidden">
+                        <div className="w-full h-2 rounded-full bg-[#F4EDE2] overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-[#008070] to-[#D4AF37] transition-all duration-300"
+                            className="h-full bg-gradient-to-r from-[#008070] to-[#D4AF37] transition-all duration-300 rounded-full"
                             style={{ width: `${uploadProgress}%` }}
                           />
                         </div>
@@ -329,10 +365,10 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                     <button
                       onClick={handleStartUpload}
                       disabled={isUploading}
-                      className="mt-3 w-full py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-105 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="mt-3 w-full py-3 px-3 rounded-xl bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer leading-tight text-center"
                     >
-                      <Upload size={14} />
-                      <span>{isUploading ? `Uploading ${currentFileIdx}/${selectedFiles.length}...` : `Send ${selectedFiles.length} File(s) To Drive`}</span>
+                      <Upload size={16} className="shrink-0 text-[#0A4A40]" />
+                      <span>{isUploading ? `Uploading ${currentFileIdx}/${selectedFiles.length}...` : `Upload ${selectedFiles.length} File(s) to Google Drive`}</span>
                     </button>
                   </div>
                 )}

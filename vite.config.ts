@@ -50,7 +50,7 @@ export default defineConfig({
             const startTime = performance.now();
             try {
               const body = JSON.parse(bodyStr);
-              const { filename, mimeType, base64, isResumable } = body || {};
+              const { action, filename, mimeType, base64, uploadUrl, chunkBase64, contentRange } = body || {};
 
               const clientId = process.env.GOOGLE_CLIENT_ID;
               const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -70,7 +70,7 @@ export default defineConfig({
               );
               oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-              if (isResumable) {
+              if (action === 'start') {
                 const tokenRes = await oauth2Client.getAccessToken();
                 const accessToken = tokenRes.token;
 
@@ -103,9 +103,32 @@ export default defineConfig({
                   return;
                 }
 
-                const uploadUrl = googleRes.headers.get('location');
+                const sessionUrl = googleRes.headers.get('location');
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: true, uploadUrl, accessToken, source: 'vite-local-direct-resumable' }));
+                res.end(JSON.stringify({ success: true, uploadUrl: sessionUrl, source: 'vite-local-resumable-start' }));
+                return;
+              }
+
+              if (action === 'chunk') {
+                const chunkBuffer = Buffer.from(chunkBase64, 'base64');
+                const googleRes = await fetch(uploadUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Range': contentRange,
+                    'Content-Type': mimeType || 'application/octet-stream',
+                  },
+                  body: chunkBuffer,
+                });
+
+                if (googleRes.status === 308 || googleRes.ok) {
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ success: true, status: googleRes.status, completed: googleRes.ok, source: 'vite-local-resumable-chunk' }));
+                  return;
+                }
+
+                const errText = await googleRes.text();
+                res.statusCode = googleRes.status;
+                res.end(JSON.stringify({ error: `Google Chunk Upload Error: ${errText}` }));
                 return;
               }
 

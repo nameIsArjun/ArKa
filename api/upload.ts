@@ -43,11 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { filename, mimeType, base64, isResumable } = body || {};
-
-    if (!filename) {
-      return res.status(400).json({ error: 'Missing filename parameter.' });
-    }
+    const { action, filename, mimeType, base64, uploadUrl, chunkBase64, contentRange } = body || {};
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -65,11 +61,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       clientSecret,
       'https://developers.google.com/oauthplayground'
     );
-
     oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-    if (isResumable) {
-      // Get OAuth2 Access Token for direct browser-to-Google streaming (bypasses 4.5MB Vercel limit for videos & large photos!)
+    // Action 1: Start Resumable Upload Session
+    if (action === 'start') {
+      if (!filename) return res.status(400).json({ error: 'Missing filename parameter.' });
+
       const tokenRes = await oauth2Client.getAccessToken();
       const accessToken = tokenRes.token;
 
@@ -98,21 +95,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(googleRes.status).json({ error: `Google API Resumable Error: ${errText}` });
       }
 
-      const uploadUrl = googleRes.headers.get('location');
-      if (!uploadUrl) {
+      const sessionUrl = googleRes.headers.get('location');
+      if (!sessionUrl) {
         return res.status(500).json({ error: 'Google API did not return upload location URL.' });
       }
 
       return res.status(200).json({
         success: true,
-        uploadUrl,
-        accessToken,
-        source: 'google-cloud-direct-resumable',
+        uploadUrl: sessionUrl,
+        source: 'google-cloud-resumable-start',
       });
     }
 
-    if (!base64) {
-      return res.status(400).json({ error: 'Missing base64 parameter for direct photo upload.' });
+    // Action 2: Send Chunks via Server Proxy (Bypasses Vercel 4.5MB limit & 0 CORS errors!)
+    if (action === 'chunk') {
+      if (!uploadUrl || !chunkBase64 || !contentRange) {
+        return res.status(400).json({ error: 'Missing uploadUrl, chunkBase64, or contentRange.' });
+      }
+
+      const chunkBuffer = Buffer.from(chunkBase64, 'base64');
+      const googleRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': contentRange,
+          'Content-Type': mimeType || 'application/octet-stream',
+        },
+        body: chunkBuffer,
+      });
+
+      // 308 Resume Incomplete = Chunk received successfully, keep sending next chunk
+      // 200 / 201 = Upload completed successfully!
+      if (googleRes.status === 308 || googleRes.ok) {
+        return res.status(200).json({
+          success: true,
+          status: googleRes.status,
+          completed: googleRes.ok,
+          source: 'google-cloud-resumable-chunk',
+        });
+      }
+
+      const errText = await googleRes.text();
+      return res.status(googleRes.status).json({ error: `Google Chunk Upload Error: ${errText}` });
+    }
+
+    // Default Action: Direct Base64 Upload (< 3 MB files)
+    if (!filename || !base64) {
+      return res.status(400).json({ error: 'Missing filename or base64 parameter.' });
     }
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
