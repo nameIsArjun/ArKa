@@ -6,6 +6,7 @@ import galleryJson from './json/gallery.json';
 import guestbookJson from './json/guestbook.json';
 
 export const WEDDING_DETAILS = weddingDetailsJson;
+export const UPLOAD_CONCURRENCY_LIMIT = (weddingDetailsJson as Record<string, any>).uploadConcurrencyLimit || 6;
 
 export const BRIDE_PROFILE: PersonProfile = {
   name: 'Kanishka Dhir',

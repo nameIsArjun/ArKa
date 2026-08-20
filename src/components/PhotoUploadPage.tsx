@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, ExternalLink, Sparkles, FolderHeart, Image as ImageIcon, X, CheckCircle2, ArrowLeft, Camera, ShieldCheck } from 'lucide-react';
-import { WEDDING_DETAILS } from '../data/weddingData';
+import { WEDDING_DETAILS, UPLOAD_CONCURRENCY_LIMIT } from '../data/weddingData';
 import { OrnamentalDivider } from './MandalaPattern';
 
 interface PhotoUploadPageProps {
@@ -15,87 +15,115 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileBase64CacheRef = useRef<Map<File, Promise<string>>>(new Map());
 
   const folderId = '1SmRzW3JpwfkYwQ_hEF9Cr5k7_KVKWUZR';
   const details = WEDDING_DETAILS as Record<string, any>;
 
   const driveUrl = details.sharedDriveUrl || `https://drive.google.com/drive/folders/${folderId}?usp=sharing`;
-  const webhookUrl = details.googleScriptWebhookUrl || 'https://script.google.com/macros/s/AKfycbzo57ci0SO2uI9rH5phtFFxCI6gS82lTRmn0pY-b4YK5dRpJdmk0KKImmYE9YNCLOekfQ/exec';
+  const webhookUrl = details.googleScriptWebhookUrl || 'https://script.google.com/macros/s/AKfycbwxZjjxf0DO8OjkW69j9CxziJS_6Yzc6Qvnv9LGvH8wJGwhmUX9WwyciKZQ66jzgFNLWA/exec';
+
+  const getFileBase64 = (file: File): Promise<string> => {
+    if (fileBase64CacheRef.current.has(file)) {
+      return fileBase64CacheRef.current.get(file)!;
+    }
+    const promise = new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const resultStr = reader.result as string;
+        resolve(resultStr.split(',')[1]);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+    fileBase64CacheRef.current.set(file, promise);
+    return promise;
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
       setSelectedFiles((prev) => [...prev, ...filesArray]);
       setUploadSuccess(false);
+      // Pre-read Base64 asynchronously in the background as soon as files are chosen
+      filesArray.forEach((file) => {
+        getFileBase64(file);
+      });
     }
   };
 
   const removeFile = (index: number) => {
+    const fileToRemove = selectedFiles[index];
+    if (fileToRemove) {
+      fileBase64CacheRef.current.delete(fileToRemove);
+    }
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-  const uploadFileToWebhook = (file: File, retries: number = 3): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const resultStr = reader.result as string;
-        const base64Data = resultStr.split(',')[1];
-        const payload = {
-          filename: file.name,
-          mimeType: file.type || 'image/jpeg',
-          base64: base64Data,
-        };
+  const uploadFileToWebhook = async (file: File, retries: number = 3): Promise<void> => {
+    const base64Data = await getFileBase64(file);
+    const payload = {
+      filename: file.name,
+      mimeType: file.type || 'image/jpeg',
+      base64: base64Data,
+    };
 
-        for (let attempt = 1; attempt <= retries; attempt++) {
-          try {
-            await fetch(webhookUrl, {
-              method: 'POST',
-              mode: 'no-cors',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(payload),
-            });
-            resolve();
-            return;
-          } catch (err) {
-            console.warn(`Upload attempt ${attempt} failed for ${file.name}:`, err);
-            if (attempt === retries) {
-              reject(err);
-              return;
-            }
-            // Exponential backoff delay (1s, 2s, 4s)
-            await delay(1000 * Math.pow(2, attempt - 1));
-          }
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        return;
+      } catch (err) {
+        console.warn(`Upload attempt ${attempt} failed for ${file.name}:`, err);
+        if (attempt === retries) {
+          throw err;
         }
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
+        await delay(1000 * Math.pow(2, attempt - 1));
+      }
+    }
   };
+
+  const CONCURRENCY_LIMIT = details.uploadConcurrencyLimit || UPLOAD_CONCURRENCY_LIMIT;
 
   const handleStartUpload = async () => {
     if (selectedFiles.length === 0) return;
 
+    const totalFiles = selectedFiles.length;
+
     setIsUploading(true);
     setUploadProgress(5);
+    setCurrentFileIdx(0);
+    setUploadSuccess(false);
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      setCurrentFileIdx(i + 1);
-      const file = selectedFiles[i];
-      try {
-        await uploadFileToWebhook(file, 3);
-        setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
-        // 300ms staggered delay between files to prevent Google rate limit spikes
-        if (i < selectedFiles.length - 1) {
-          await delay(300);
+    let completedCount = 0;
+    const queue = [...selectedFiles];
+
+    const worker = async () => {
+      while (queue.length > 0) {
+        const file = queue.shift();
+        if (!file) break;
+        try {
+          await uploadFileToWebhook(file, 3);
+        } catch (e) {
+          console.error('Failed file after retries:', file.name, e);
+        } finally {
+          completedCount++;
+          setCurrentFileIdx(completedCount);
+          setUploadProgress(Math.round((completedCount / totalFiles) * 100));
         }
-      } catch (e) {
-        console.error('Failed file after retries:', file.name, e);
       }
-    }
+    };
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY_LIMIT, totalFiles) }, () => worker());
+    await Promise.all(workers);
 
     setIsUploading(false);
     setUploadSuccess(true);
@@ -172,7 +200,7 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
                   className="mt-6 w-full p-4 rounded-2xl bg-green-50 border border-green-300 text-green-800 text-xs font-semibold flex items-center justify-center gap-2 shadow-xs"
                 >
                   <CheckCircle2 size={18} className="text-green-600 shrink-0" />
-                  <span>Success! Your photos are saved directly in Arjun & Kanishka&apos;s Google Drive album! 🎉</span>
+                  <span>Success! Photos saved directly into Arjun & Kanishka&apos;s Google Drive album! 🎉</span>
                 </motion.div>
               )}
             </AnimatePresence>
