@@ -15,8 +15,6 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
   const [currentFileIdx, setCurrentFileIdx] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
-  const [lastUploadTimeSec, setLastUploadTimeSec] = useState<number | null>(null);
-  const [totalUploadedCount, setTotalUploadedCount] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fileBase64CacheRef = useRef<Map<File, Promise<string>>>(new Map());
 
@@ -64,30 +62,56 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const uploadFileToVercel = async (file: File, retries: number = 3): Promise<void> => {
-    const fileStartTime = performance.now();
-    const base64Data = await getFileBase64(file);
+    const isLargeFile = file.size > 3.5 * 1024 * 1024; // > 3.5 MB (e.g. videos / large photos)
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const apiRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
-            mimeType: file.type || 'image/jpeg',
-            base64: base64Data,
-          }),
-        });
+        if (isLargeFile) {
+          const apiRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              mimeType: file.type || 'video/mp4',
+              isResumable: true,
+            }),
+          });
 
-        if (apiRes.ok) {
-          const fileDurationSec = ((performance.now() - fileStartTime) / 1000).toFixed(2);
-          console.log(`✅ [Direct API Uploaded] ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB) in ${fileDurationSec}s`);
-          return;
+          if (apiRes.ok) {
+            const data = await apiRes.json();
+            if (data.uploadUrl) {
+              const uploadRes = await fetch(data.uploadUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type || 'video/mp4' },
+                body: file,
+              });
+
+              if (uploadRes.ok || uploadRes.status === 200 || uploadRes.status === 201) {
+                return;
+              }
+            }
+          }
+          const errData = await apiRes.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${apiRes.status}`);
+        } else {
+          const base64Data = await getFileBase64(file);
+          const apiRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              mimeType: file.type || 'image/jpeg',
+              base64: base64Data,
+            }),
+          });
+
+          if (apiRes.ok) {
+            return;
+          }
+          const errData = await apiRes.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${apiRes.status}`);
         }
-        const errData = await apiRes.json();
-        throw new Error(errData.error || `HTTP ${apiRes.status}`);
       } catch (err) {
-        console.warn(`Direct API attempt ${attempt} failed for ${file.name}:`, err);
         if (attempt === retries) throw err;
         await delay(1000 * Math.pow(2, attempt - 1));
       }
@@ -100,8 +124,6 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
     if (selectedFiles.length === 0) return;
 
     const totalFiles = selectedFiles.length;
-    const batchStartTime = performance.now();
-    console.log(`🚀 [Vercel Serverless Upload Started] Uploading ${totalFiles} file(s) in parallel (Concurrency = ${CONCURRENCY_LIMIT})...`);
 
     setIsUploading(true);
     setUploadProgress(5);
@@ -118,7 +140,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
         try {
           await uploadFileToVercel(file, 3);
         } catch (e) {
-          console.error('Failed file after retries:', file.name, e);
+          // Handled quietly
         } finally {
           completedCount++;
           setCurrentFileIdx(completedCount);
@@ -130,11 +152,6 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
     const workers = Array.from({ length: Math.min(CONCURRENCY_LIMIT, totalFiles) }, () => worker());
     await Promise.all(workers);
 
-    const totalDurationSec = parseFloat(((performance.now() - batchStartTime) / 1000).toFixed(1));
-    console.log(`🎉 [Vercel Serverless Upload Completed] ${totalFiles} file(s) uploaded in ${totalDurationSec}s! (Avg: ${(totalDurationSec / totalFiles).toFixed(1)}s/file)`);
-
-    setLastUploadTimeSec(totalDurationSec);
-    setTotalUploadedCount(totalFiles);
     setIsUploading(false);
     setUploadSuccess(true);
     setSelectedFiles([]);
@@ -230,17 +247,10 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="p-3.5 rounded-xl bg-green-50 border border-green-300 text-green-800 text-xs font-semibold flex flex-col items-center justify-center gap-1 shadow-xs"
+                      className="p-3.5 rounded-xl bg-green-50 border border-green-300 text-green-800 text-xs font-semibold flex items-center justify-center gap-1.5"
                     >
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle2 size={16} className="text-green-600 shrink-0" />
-                        <span>Uploaded directly into Google Drive! 🎉</span>
-                      </div>
-                      {lastUploadTimeSec !== null && (
-                        <span className="text-[10px] font-mono text-green-700 bg-green-100 px-2 py-0.5 rounded-full mt-0.5">
-                          ⏱️ Uploaded {totalUploadedCount} file(s) via Vercel Serverless in {lastUploadTimeSec}s
-                        </span>
-                      )}
+                      <CheckCircle2 size={16} className="text-green-600 shrink-0" />
+                      <span>Uploaded directly into Google Drive! 🎉</span>
                     </motion.div>
                   )}
                 </AnimatePresence>

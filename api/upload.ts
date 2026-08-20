@@ -43,10 +43,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { filename, mimeType, base64 } = body || {};
+    const { filename, mimeType, base64, isResumable } = body || {};
 
-    if (!filename || !base64) {
-      return res.status(400).json({ error: 'Missing filename or base64 parameter.' });
+    if (!filename) {
+      return res.status(400).json({ error: 'Missing filename parameter.' });
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -67,6 +67,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+    if (isResumable) {
+      // Get OAuth2 Access Token for direct browser-to-Google streaming (bypasses 4.5MB Vercel limit for videos!)
+      const tokenRes = await oauth2Client.getAccessToken();
+      const accessToken = tokenRes.token;
+
+      if (!accessToken) {
+        return res.status(500).json({ error: 'Failed to obtain access token for resumable video upload.' });
+      }
+
+      const googleRes = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Type': mimeType || 'video/mp4',
+          },
+          body: JSON.stringify({
+            name: filename,
+            parents: [folderId],
+          }),
+        }
+      );
+
+      if (!googleRes.ok) {
+        const errText = await googleRes.text();
+        return res.status(googleRes.status).json({ error: `Google API Resumable Error: ${errText}` });
+      }
+
+      const uploadUrl = googleRes.headers.get('location');
+      if (!uploadUrl) {
+        return res.status(500).json({ error: 'Google API did not return upload location URL.' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        uploadUrl,
+        source: 'google-cloud-direct-resumable',
+      });
+    }
+
+    if (!base64) {
+      return res.status(400).json({ error: 'Missing base64 parameter for direct photo upload.' });
+    }
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
     const buffer = Buffer.from(base64, 'base64');
@@ -95,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       source: 'google-cloud-direct-api-v3',
     });
   } catch (err: any) {
-    console.error('Error in direct Google Drive API upload function:', err);
+    console.error('Error in Google Drive API upload function:', err);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
