@@ -1,11 +1,114 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { google } from 'googleapis';
+import { Readable } from 'stream';
+import fs from 'fs';
+
+// Helper to load .env.local in Vite config
+const loadEnvLocal = () => {
+  try {
+    const envLocalPath = path.resolve(__dirname, '.env.local');
+    if (fs.existsSync(envLocalPath)) {
+      const content = fs.readFileSync(envLocalPath, 'utf8');
+      content.split('\n').forEach((line) => {
+        const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+        if (match) {
+          const key = match[1].trim();
+          let value = match[2].trim();
+          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          if (!process.env[key]) process.env[key] = value;
+        }
+      });
+    }
+  } catch (e) {}
+};
+
+loadEnvLocal();
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './',
-  plugins: [react()],
+  base: '/',
+  plugins: [
+    react(),
+    {
+      name: 'local-api-upload-middleware',
+      configureServer(server) {
+        server.middlewares.use('/api/upload', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+          }
+          let bodyStr = '';
+          req.on('data', (chunk) => {
+            bodyStr += chunk;
+          });
+          req.on('end', async () => {
+            const startTime = performance.now();
+            try {
+              const body = JSON.parse(bodyStr);
+              const { filename, mimeType, base64 } = body || {};
+
+              const clientId = process.env.GOOGLE_CLIENT_ID;
+              const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+              const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+              const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '1SmRzW3JpwfkYwQ_hEF9Cr5k7_KVKWUZR';
+
+              if (!clientId || !clientSecret || !refreshToken) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: 'Google OAuth2 credentials missing in .env.local' }));
+                return;
+              }
+
+              const oauth2Client = new google.auth.OAuth2(
+                clientId,
+                clientSecret,
+                'https://developers.google.com/oauthplayground'
+              );
+              oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+              const drive = google.drive({ version: 'v3', auth: oauth2Client });
+              const buffer = Buffer.from(base64, 'base64');
+              const mediaStream = Readable.from(buffer);
+
+              const driveRes = await drive.files.create({
+                requestBody: {
+                  name: filename,
+                  parents: [folderId],
+                },
+                media: {
+                  mimeType: mimeType || 'image/jpeg',
+                  body: mediaStream,
+                },
+                fields: 'id, name, webViewLink',
+              });
+
+              const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(2);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  fileId: driveRes.data.id,
+                  fileName: driveRes.data.name,
+                  fileUrl: driveRes.data.webViewLink,
+                  elapsedSec,
+                  source: 'vite-local-direct-oauth-v3',
+                })
+              );
+            } catch (err: any) {
+              console.error('Error in local dev upload middleware:', err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message || 'Server Error' }));
+            }
+          });
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

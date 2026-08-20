@@ -1,10 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 import fs from 'fs';
 import path from 'path';
 
-// Local development fallback: load .env.local if environment variables are not injected
-if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+// Local development fallback: load .env.local if process.env is missing keys
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_REFRESH_TOKEN) {
   try {
     const envLocalPath = path.resolve(process.cwd(), '.env.local');
     if (fs.existsSync(envLocalPath)) {
@@ -23,13 +24,10 @@ if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
         }
       });
     }
-  } catch (e) {
-    // Ignore local parse error
-  }
+  } catch (e) {}
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -38,78 +36,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  const startTime = performance.now();
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { filename, mimeType } = body || {};
+    const { filename, mimeType, base64 } = body || {};
 
-    if (!filename) {
-      return res.status(400).json({ error: 'Missing filename parameter in request body.' });
+    if (!filename || !base64) {
+      return res.status(400).json({ error: 'Missing filename or base64 parameter.' });
     }
 
-    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '1SmRzW3JpwfkYwQ_hEF9Cr5k7_KVKWUZR';
 
-    if (!clientEmail || !privateKey) {
+    if (!clientId || !clientSecret || !refreshToken) {
       return res.status(500).json({
-        error: 'Google Service Account environment variables missing. Please configure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY in your environment.'
+        error: 'Google OAuth2 credentials missing. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN.'
       });
     }
 
-    const auth = new google.auth.JWT({
-      email: clientEmail,
-      key: privateKey,
-      scopes: [
-        'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/drive',
-      ],
-    });
-
-    const tokenResponse = await auth.getAccessToken();
-    const accessToken = tokenResponse.token;
-
-    if (!accessToken) {
-      return res.status(500).json({ error: 'Failed to obtain OAuth2 access token from Google.' });
-    }
-
-    // Request Google Drive Resumable Upload Session URL
-    const googleRes = await fetch(
-      'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json; charset=UTF-8',
-          'X-Upload-Content-Type': mimeType || 'image/jpeg',
-        },
-        body: JSON.stringify({
-          name: filename,
-          parents: [folderId],
-        }),
-      }
+    const oauth2Client = new google.auth.OAuth2(
+      clientId,
+      clientSecret,
+      'https://developers.google.com/oauthplayground'
     );
 
-    if (!googleRes.ok) {
-      const errText = await googleRes.text();
-      return res.status(googleRes.status).json({ error: `Google API Error (${googleRes.status}): ${errText}` });
-    }
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-    const uploadUrl = googleRes.headers.get('location');
-    if (!uploadUrl) {
-      return res.status(500).json({ error: 'Google API response did not include a location header for the resumable upload.' });
-    }
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    const buffer = Buffer.from(base64, 'base64');
+    const mediaStream = Readable.from(buffer);
 
-    return res.status(200).json({ uploadUrl });
+    const driveRes = await drive.files.create({
+      requestBody: {
+        name: filename,
+        parents: [folderId],
+      },
+      media: {
+        mimeType: mimeType || 'image/jpeg',
+        body: mediaStream,
+      },
+      fields: 'id, name, webViewLink',
+    });
+
+    const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(2);
+
+    return res.status(200).json({
+      success: true,
+      fileId: driveRes.data.id,
+      fileName: driveRes.data.name,
+      fileUrl: driveRes.data.webViewLink,
+      elapsedSec,
+      source: 'google-cloud-direct-api-v3',
+    });
   } catch (err: any) {
-    console.error('Error in /api/upload handler:', err);
+    console.error('Error in direct Google Drive API upload function:', err);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
