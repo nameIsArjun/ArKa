@@ -33,9 +33,9 @@ export const MonogramLogo: React.FC<MonogramLogoProps> = ({
   };
 
   const imageSrcMap = {
-    mandala: getAssetUrl('/images/royal-mandala-logo.png'),
-    card: getAssetUrl('/images/royal-card-full.jpg'),
-    center: getAssetUrl('/images/royal-monogram-center.png'),
+    mandala: getAssetUrl('/images/logo_monogram.png'),
+    card: getAssetUrl('/images/logo_monogram.png'),
+    center: getAssetUrl('/images/logo_monogram.png'),
   };
 
   const { box, text, sparkSize } = sizeMap[size];

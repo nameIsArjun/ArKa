@@ -4,32 +4,19 @@ import { CountdownTimer } from './CountdownTimer';
 import { MandalaPattern, OrnamentalDivider } from './MandalaPattern';
 import { motion } from 'framer-motion';
 import { Calendar, Sparkles } from 'lucide-react';
+import { triggerIcsDownload } from '../utils/calendarHelper';
 
 export const SaveTheDateView: React.FC = () => {
-  // Download .ics reminder file for the Save The Date
+  // Download Safari-compatible .ics reminder file for the Save The Date
   const downloadSaveTheDateIcs = () => {
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Arjun & Kanishka Wedding//EN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VEVENT
-SUMMARY:Save The Date: Arjun Puri & Kanishka Dhir Wedding
-DESCRIPTION:Save the date for the wedding of Arjun Puri & Kanishka Dhir!
-DTSTART:20261112T000000Z
-DTEND:20261112T235959Z
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'Arjun_Kanishka_Save_The_Date.ics');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    triggerIcsDownload({
+      id: 'save-the-date',
+      title: 'Save The Date: Arjun Puri & Kanishka Dhir Wedding',
+      description: 'Save the date for the wedding of Arjun Puri & Kanishka Dhir!',
+      dateStr: 'Thursday, November 12, 2026',
+      venueName: 'Anutham Hotel & Resort',
+      address: 'Jammu, J&K',
+    });
   };
 
   return (

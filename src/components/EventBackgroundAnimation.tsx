@@ -179,7 +179,7 @@ export const EventBackgroundAnimation: React.FC<EventBackgroundAnimationProps> =
         <motion.div
           animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.3, 0.7, 0.3] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute inset-0 bg-radial from-[#F3E5AB]/40 via-[#0A4A40]/20 to-transparent blur-2xl"
+          className="absolute inset-0 bg-radial from-[#FFD700]/40 via-[#FF5722]/20 to-transparent blur-2xl"
         />
 
         {/* Floating Serene Particles */}
@@ -197,10 +197,10 @@ export const EventBackgroundAnimation: React.FC<EventBackgroundAnimationProps> =
               delay: i * 0.4,
               ease: 'easeInOut',
             }}
-            className="absolute text-[#FFFDF9]"
+            className="absolute text-[#FFD700]"
             style={{ left: `${(i * 14 + 7) % 95}%`, bottom: '0%' }}
           >
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#F3E5AB] shadow-[0_0_10px_#D4AF37]" />
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#FFD700] shadow-[0_0_12px_#FF5722]" />
           </motion.div>
         ))}
       </div>

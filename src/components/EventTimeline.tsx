@@ -6,6 +6,7 @@ import { OrnamentalDivider } from './MandalaPattern';
 import { Clock, MapPin, Sparkles, ExternalLink, Download, Shirt, X, Lock, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAssetUrl } from '../utils/assetHelper';
 import { EventBackgroundAnimation } from './EventBackgroundAnimation';
+import { triggerIcsDownload } from '../utils/calendarHelper';
 
 // Swiper React Components & Modules
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -108,26 +109,18 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
     swiperRef.current?.slidePrev();
   };
 
-  // Generate .ics calendar download for an event
+  // Triggers Safari and Cross-Browser compatible iCalendar (.ics) download for an event
   const downloadIcs = (evt: EventItem) => {
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Arjun & Kanishka Wedding//EN
-BEGIN:VEVENT
-SUMMARY:${evt.title} - Arjun & Kanishka Wedding
-DESCRIPTION:${evt.description} | Dress Code: ${evt.dressCode}
-LOCATION:${evt.venueName}, ${evt.address}
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.setAttribute('download', `${evt.id}-arjun-kanishka-wedding.ics`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    triggerIcsDownload({
+      id: evt.id,
+      title: evt.title,
+      subtitle: evt.subtitle,
+      description: evt.description,
+      dateStr: evt.date,
+      venueName: evt.venueName,
+      address: evt.address,
+      dressCode: evt.dressCode,
+    });
   };
 
   return (
@@ -660,7 +653,9 @@ END:VCALENDAR`;
                 <span className="font-serif text-lg font-bold text-[#0A4A40] z-10 mt-2">
                   {selectedMapEvent.location}
                 </span>
-                <span className="text-xs text-[#008070] font-semibold z-10">Jammu & Bathinda</span>
+                <span className="text-xs text-[#008070] font-semibold z-10">
+                  {selectedMapEvent.city ? `${selectedMapEvent.city}` : (selectedMapEvent.address.includes('Bathinda') ? 'Bathinda' : 'Jammu')}
+                </span>
               </div>
 
               <div className="flex items-center justify-between gap-3">

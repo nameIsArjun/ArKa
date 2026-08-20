@@ -10,6 +10,7 @@ import { FamilyGrid } from './components/FamilyGrid';
 import { GalleryGrid } from './components/GalleryGrid';
 import { GuestbookSection } from './components/GuestbookSection';
 import { Footer } from './components/Footer';
+import { GlobalPetalsOverlay } from './components/GlobalPetalsOverlay';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
 
 const COOKIE_KEY = 'arka_wedding_guest_side';
@@ -280,6 +281,9 @@ export function App() {
   return (
     <LayoutGroup>
       <div className="min-h-screen bg-[#FAF6F0] text-[#2D3748] relative font-sans overflow-x-hidden selection:bg-[#D4AF37]/30 selection:text-[#0A4A40]">
+        {/* Global Floating Rose Petals & Golden Sparkles Overlay */}
+        <GlobalPetalsOverlay />
+
         {/* Preloader Splash Intro */}
         <AnimatePresence mode="wait">
           {showSplash && (

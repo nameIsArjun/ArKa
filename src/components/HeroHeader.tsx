@@ -3,27 +3,47 @@ import { motion } from 'framer-motion';
 import { MonogramLogo } from './MonogramLogo';
 import { CountdownTimer } from './CountdownTimer';
 import { MandalaPattern, OrnamentalDivider } from './MandalaPattern';
-import { Calendar, MapPin, Sparkles, ChevronDown } from 'lucide-react';
+import { Calendar, Sparkles, ChevronDown, Heart } from 'lucide-react';
 import { WEDDING_DETAILS } from '../data/weddingData';
 
 export const HeroHeader: React.FC = () => {
   return (
-    <section className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 px-4 overflow-hidden bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#F4EDE2] text-[#2D3748]">
-      {/* Background Watermark Mandala */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
-        <MandalaPattern size={680} className="animate-spin-slow" />
+    <section className="relative min-h-[95vh] flex flex-col items-center justify-center pt-28 pb-16 px-4 overflow-hidden bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#F4EDE2] text-[#2D3748]">
+      
+      {/* 1. Background Watermark Mandala with Dual Rotation */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+        <MandalaPattern size={720} className="animate-spin-slow text-[#D4AF37]" />
       </div>
 
-      {/* Hero Ambient Gold Glow */}
-      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#D4AF37]/15 to-transparent pointer-events-none" />
+      {/* 2. Hero Ambient Gold & Emerald Radial Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-[#D4AF37]/20 via-[#008070]/10 to-[#E5C158]/20 blur-3xl pointer-events-none rounded-full" />
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
+
+
+      {/* 4. Royal Gold Corner Filigree Ornaments */}
+      <div className="absolute top-4 left-4 w-12 h-12 border-t-2 border-l-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
+      <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
+      <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
+      <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
+
+      <div className="relative z-30 max-w-4xl mx-auto text-center flex flex-col items-center">
+        
+        {/* Sacred Sanskrit Invocation Shlok */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="font-serif text-xs sm:text-sm tracking-[0.3em] text-[#B38728] font-bold uppercase mb-2"
+        >
+          ॥ श्री गणेशाय नमः ॥
+        </motion.div>
+
         {/* Top Blessing Badge */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#FFFDF9] border border-[#D4AF37]/60 text-[#B38728] text-xs font-serif tracking-[0.25em] uppercase mb-6 shadow-sm font-semibold"
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#FFFDF9]/90 border border-[#D4AF37]/60 text-[#B38728] text-xs font-serif tracking-[0.25em] uppercase mb-6 shadow-md font-semibold backdrop-blur-xs"
         >
           <Sparkles size={13} className="text-[#008070]" />
           <span>Together With Their Families</span>
@@ -54,28 +74,25 @@ export const HeroHeader: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-3 font-serif text-lg sm:text-2xl italic tracking-[0.3em] text-[#008070] uppercase font-semibold"
+          className="mt-3 font-serif text-lg sm:text-2xl italic tracking-[0.3em] text-[#008070] uppercase font-semibold flex items-center justify-center gap-3"
         >
-          A Journey Begins
+          <span className="w-8 h-[1px] bg-[#D4AF37]/60 hidden sm:inline-block" />
+          <span>A Journey Begins</span>
+          <span className="w-8 h-[1px] bg-[#D4AF37]/60 hidden sm:inline-block" />
         </motion.p>
 
         <OrnamentalDivider className="w-full max-w-md my-4" />
 
-        {/* Event Details Badge */}
+        {/* Centered Event Date Pill */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm tracking-widest text-[#2D3748] uppercase font-semibold"
+          className="flex items-center justify-center text-xs sm:text-sm tracking-widest uppercase font-semibold"
         >
-          <div className="flex items-center gap-1.5 text-[#B38728]">
-            <Calendar size={16} />
-            <span>{WEDDING_DETAILS.weddingDateRange}</span>
-          </div>
-          <span className="hidden sm:inline text-[#D4AF37]">•</span>
-          <div className="flex items-center gap-1.5 text-[#008070]">
-            <MapPin size={16} />
-            <span>{WEDDING_DETAILS.mainLocation}</span>
+          <div className="flex items-center gap-2 text-[#B38728] px-5 py-2 rounded-full bg-[#FFFDF9]/90 border border-[#D4AF37]/60 shadow-sm backdrop-blur-xs">
+            <Calendar size={16} className="text-[#008070]" />
+            <span>NOV 12, 2026</span>
           </div>
         </motion.div>
 
@@ -106,9 +123,9 @@ export const HeroHeader: React.FC = () => {
 
         {/* Scroll indicator */}
         <a
-          href="#tabs-section"
-          className="mt-12 text-[#B38728] hover:text-[#0A4A40] animate-bounce transition-colors"
-          title="Scroll to perspectives"
+          href="#itinerary"
+          className="mt-10 text-[#B38728] hover:text-[#0A4A40] animate-bounce transition-colors"
+          title="Scroll to itinerary"
         >
           <ChevronDown size={28} />
         </a>
