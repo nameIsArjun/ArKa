@@ -63,6 +63,34 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const uploadFileToWebhook = async (file: File, retries: number = 3): Promise<void> => {
+    // 1. Try Vercel Serverless Function first for Direct Raw Binary Streaming
+    try {
+      const apiRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, mimeType: file.type || 'image/jpeg' }),
+      });
+
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data.uploadUrl) {
+          // Stream raw binary file directly to Google Cloud Storage (0 Base64 overhead)
+          const uploadRes = await fetch(data.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type || 'image/jpeg' },
+            body: file,
+          });
+
+          if (uploadRes.ok || uploadRes.status === 201 || uploadRes.status === 200) {
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`Vercel API direct upload failed for ${file.name}, using fallback:`, err);
+    }
+
+    // 2. Fallback to Webhook if /api/upload is unavailable or unconfigured
     const base64Data = await getFileBase64(file);
     const payload = {
       filename: file.name,
