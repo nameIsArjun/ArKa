@@ -117,6 +117,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
       subtitle: evt.subtitle,
       description: evt.description,
       dateStr: evt.date,
+      timeStr: evt.time,
       venueName: evt.venueName,
       address: evt.address,
       dressCode: evt.dressCode,
@@ -515,7 +516,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
       {/* TEAM SELECTION POPUP MODAL: DULHAN & GROOM CARDS ONLY */}
       <AnimatePresence>
         {showTeamModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -622,7 +623,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
       {/* Map Directions Modal */}
       <AnimatePresence>
         {selectedMapEvent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

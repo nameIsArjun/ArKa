@@ -100,7 +100,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity"
           />
 
           {/* Right Slide-Over Side Drawer */}
@@ -109,7 +109,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#FFFDF9] border-l-2 border-[#D4AF37] shadow-2xl z-50 overflow-y-auto flex flex-col justify-between"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#FFFDF9] border-l-2 border-[#D4AF37] shadow-2xl z-[9999] overflow-y-auto flex flex-col justify-between"
           >
             {/* Drawer Header */}
             <div className="p-6 border-b border-[#D4AF37]/30 bg-[#FAF6F0] sticky top-0 z-10 flex items-center justify-between">

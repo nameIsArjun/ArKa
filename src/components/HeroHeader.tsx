@@ -26,7 +26,7 @@ export const HeroHeader: React.FC = () => {
       <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
       <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
 
-      <div className="relative z-30 max-w-4xl mx-auto text-center flex flex-col items-center">
+      <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
 
         {/* Sacred Sanskrit Invocation Shlok */}
         <motion.div
