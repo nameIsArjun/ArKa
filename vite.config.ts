@@ -50,7 +50,7 @@ export default defineConfig({
             const startTime = performance.now();
             try {
               const body = JSON.parse(bodyStr);
-              const { filename, mimeType, base64 } = body || {};
+              const { filename, mimeType, base64, isResumable } = body || {};
 
               const clientId = process.env.GOOGLE_CLIENT_ID;
               const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -69,6 +69,51 @@ export default defineConfig({
                 'https://developers.google.com/oauthplayground'
               );
               oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+              if (isResumable) {
+                const tokenRes = await oauth2Client.getAccessToken();
+                const accessToken = tokenRes.token;
+
+                if (!accessToken) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to obtain access token for resumable video upload.' }));
+                  return;
+                }
+
+                const googleRes = await fetch(
+                  'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+                  {
+                    method: 'POST',
+                    headers: {
+                      Authorization: `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json; charset=UTF-8',
+                      'X-Upload-Content-Type': mimeType || 'video/mp4',
+                    },
+                    body: JSON.stringify({
+                      name: filename,
+                      parents: [folderId],
+                    }),
+                  }
+                );
+
+                if (!googleRes.ok) {
+                  const errText = await googleRes.text();
+                  res.statusCode = googleRes.status;
+                  res.end(JSON.stringify({ error: `Google API Resumable Error: ${errText}` }));
+                  return;
+                }
+
+                const uploadUrl = googleRes.headers.get('location');
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: true, uploadUrl, source: 'vite-local-direct-resumable' }));
+                return;
+              }
+
+              if (!base64) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing base64 parameter.' }));
+                return;
+              }
 
               const drive = google.drive({ version: 'v3', auth: oauth2Client });
               const buffer = Buffer.from(base64, 'base64');
