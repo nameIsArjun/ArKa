@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { MonogramLogo } from './MonogramLogo';
-import { Menu, X, RotateCcw } from 'lucide-react';
+import { Menu, X, RotateCcw, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WEDDING_DETAILS } from '../data/weddingData';
 
 interface NavbarProps {
   onReplaySplash: () => void;
+  onOpenPhotoDrive?: () => void;
   isSaveTheDateMode: boolean;
   showPillarsOfLove?: boolean;
   showVisualMemories?: boolean;
+  showPhotoDrive?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onReplaySplash,
+  onOpenPhotoDrive,
   isSaveTheDateMode,
   showPillarsOfLove = false,
   showVisualMemories = false,
+  showPhotoDrive = true,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [showNavbarLogo, setShowNavbarLogo] = useState(false);
@@ -109,6 +113,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
           )}
 
+          {/* Upload / View Photos Side Drawer Button */}
+          {onOpenPhotoDrive && (
+            <button
+              onClick={onOpenPhotoDrive}
+              title="Open Photo & Video Hub"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] text-[11px] font-serif font-bold uppercase tracking-wider shadow-xs hover:brightness-105 transition-all cursor-pointer border border-[#B38728]/40"
+            >
+              <span>Photos</span>
+              <Camera size={13} />
+            </button>
+          )}
+
           {/* Replay Intro Button */}
           <button
             onClick={onReplaySplash}
@@ -130,42 +146,73 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu & Click-Outside Overlay */}
       <AnimatePresence>
         {!isSaveTheDateMode && mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#FFFDF9]/98 border-b border-[#D4AF37]/40 backdrop-blur-xl overflow-hidden shadow-xl"
-          >
-            <div className="px-6 py-6 flex flex-col gap-4 text-center">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="font-serif text-lg tracking-widest font-bold text-[#0A4A40] hover:text-[#B38728] py-1 border-b border-[#D4AF37]/20"
-                >
-                  {link.label}
-                </a>
-              ))}
+          <>
+            {/* Click-Outside Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/30 backdrop-blur-xs z-30 md:hidden"
+            />
 
-              <div className="flex items-center justify-center gap-4 mt-2 pt-2">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onReplaySplash();
-                  }}
-                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#B38728]"
-                >
-                  <RotateCcw size={14} /> Replay Intro
-                </button>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden relative z-40 bg-[#FFFDF9]/98 text-[#0A4A40] border-b-2 border-[#D4AF37] shadow-2xl backdrop-blur-2xl overflow-hidden"
+            >
+              {/* Corner Gold Filigree Accents */}
+              <div className="absolute top-2 left-2 text-[#D4AF37]/50 text-xs font-serif font-bold select-none pointer-events-none">❖</div>
+              <div className="absolute top-2 right-2 text-[#D4AF37]/50 text-xs font-serif font-bold select-none pointer-events-none">❖</div>
+
+              <div className="px-8 py-7 flex flex-col gap-4 text-center relative z-10">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-serif text-lg tracking-[0.2em] uppercase font-extrabold text-[#0A4A40] hover:text-[#B38728] active:scale-98 transition-all py-2 border-b border-[#D4AF37]/30 flex items-center justify-center gap-2 group"
+                  >
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-[#D4AF37]">✦</span>
+                    <span>{link.label}</span>
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-[#D4AF37]">✦</span>
+                  </a>
+                ))}
+
+                {showPhotoDrive && onOpenPhotoDrive && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenPhotoDrive();
+                    }}
+                    className="mt-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-[0.2em] shadow-lg hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-2 border border-[#B38728]/40 cursor-pointer"
+                  >
+                    <Camera size={16} />
+                    <span>Upload & View Photos</span>
+                  </button>
+                )}
+
+                <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-[#D4AF37]/30">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onReplaySplash();
+                    }}
+                    className="flex items-center gap-2 text-xs font-serif font-bold uppercase tracking-[0.2em] text-[#8C641D] hover:text-[#0A4A40] transition-colors"
+                  >
+                    <RotateCcw size={14} className="text-[#D4AF37]" />
+                    <span>Replay Entrance Intro</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+        </>
+      )}
+    </AnimatePresence>
     </header>
   );
 };

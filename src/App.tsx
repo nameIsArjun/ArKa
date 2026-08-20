@@ -11,6 +11,7 @@ import { GalleryGrid } from './components/GalleryGrid';
 import { GuestbookSection } from './components/GuestbookSection';
 import { Footer } from './components/Footer';
 import { GlobalPetalsOverlay } from './components/GlobalPetalsOverlay';
+import { SharedPhotoDrive } from './components/SharedPhotoDrive';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
 
 const COOKIE_KEY = 'arka_wedding_guest_side';
@@ -261,16 +262,31 @@ function getShowVisualMemories(): boolean {
   return false; // Default false as requested
 }
 
+/**
+ * Evaluates whether Photo & Video Drive feature is displayed:
+ * Strictly controlled by Environment Variable: VITE_SHOW_PHOTO_DRIVE or VITE_SHOW_PHOTOS_SECTION
+ */
+function getShowPhotoDrive(): boolean {
+  const envVar = import.meta.env.VITE_SHOW_PHOTO_DRIVE || import.meta.env.VITE_SHOW_PHOTOS_SECTION;
+  if (envVar !== undefined && envVar !== '') {
+    return String(envVar).toLowerCase() === 'true';
+  }
+
+  return true; // Default true when env variable is not set
+}
+
 export function App() {
   const initialRole = getInitialSideAndRole();
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialRole.activeTab);
   const [hasSelectedTeam, setHasSelectedTeam] = useState<boolean>(initialRole.hasSelectedTeam);
   const [isAdmin] = useState<boolean>(initialRole.isAdmin);
+  const [isPhotoDriveOpen, setIsPhotoDriveOpen] = useState<boolean>(false);
   
   const isSaveTheDateMode = getSaveTheDateMode();
   const showPillarsOfLove = getShowPillarsOfLove();
   const showVisualMemories = getShowVisualMemories();
+  const showPhotoDrive = getShowPhotoDrive();
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
@@ -284,6 +300,11 @@ export function App() {
         {/* Global Floating Rose Petals & Golden Sparkles Overlay */}
         <GlobalPetalsOverlay />
 
+        {/* Side Slide-Over Drawer for Guest Photo & Video Drive */}
+        {showPhotoDrive && (
+          <SharedPhotoDrive isOpen={isPhotoDriveOpen} onClose={() => setIsPhotoDriveOpen(false)} />
+        )}
+
         {/* Preloader Splash Intro */}
         <AnimatePresence mode="wait">
           {showSplash && (
@@ -294,9 +315,11 @@ export function App() {
         {/* Sticky Header Navbar */}
         <Navbar
           onReplaySplash={() => setShowSplash(true)}
+          onOpenPhotoDrive={showPhotoDrive ? () => setIsPhotoDriveOpen(true) : undefined}
           isSaveTheDateMode={isSaveTheDateMode}
           showPillarsOfLove={showPillarsOfLove}
           showVisualMemories={showVisualMemories}
+          showPhotoDrive={showPhotoDrive}
         />
 
         {/* Main Content: Either Save The Date Landing View OR Full Interactive Wedding Site */}

@@ -8,7 +8,9 @@
     "mainLocation": "Anutham Hotel & Resort, Jammu",
     "city": "Jammu",
     "tagline": "A Journey Begins",
-    "isSaveTheDateMode": true
+    "isSaveTheDateMode": true,
+    "sharedDriveUrl": "https://drive.google.com/drive/folders/1SmRzW3JpwfkYwQ_hEF9Cr5k7_KVKWUZR?usp=sharing",
+    "googleScriptWebhookUrl": "https://script.google.com/macros/s/AKfycbzo57ci0SO2uI9rH5phtFFxCI6gS82lTRmn0pY-b4YK5dRpJdmk0KKImmYE9YNCLOekfQ/exec"
   },
   "events": [
     {
