@@ -15,6 +15,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
   const [currentFileIdx, setCurrentFileIdx] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const fileBase64CacheRef = useRef<Map<File, Promise<string>>>(new Map());
 
@@ -45,6 +46,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
       const filesArray = Array.from(e.target.files);
       setSelectedFiles((prev) => [...prev, ...filesArray]);
       setUploadSuccess(false);
+      setUploadError(null);
       filesArray.forEach((file) => {
         getFileBase64(file);
       });
@@ -62,55 +64,25 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const uploadFileToVercel = async (file: File, retries: number = 3): Promise<void> => {
-    const isLargeFile = file.size > 3.5 * 1024 * 1024; // > 3.5 MB (e.g. videos / large photos)
+    const base64Data = await getFileBase64(file);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        if (isLargeFile) {
-          const apiRes = await fetch('/api/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename: file.name,
-              mimeType: file.type || 'video/mp4',
-              isResumable: true,
-            }),
-          });
+        const apiRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            mimeType: file.type || 'image/jpeg',
+            base64: base64Data,
+          }),
+        });
 
-          if (apiRes.ok) {
-            const data = await apiRes.json();
-            if (data.uploadUrl) {
-              const uploadRes = await fetch(data.uploadUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': file.type || 'video/mp4' },
-                body: file,
-              });
-
-              if (uploadRes.ok || uploadRes.status === 200 || uploadRes.status === 201) {
-                return;
-              }
-            }
-          }
-          const errData = await apiRes.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${apiRes.status}`);
-        } else {
-          const base64Data = await getFileBase64(file);
-          const apiRes = await fetch('/api/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename: file.name,
-              mimeType: file.type || 'image/jpeg',
-              base64: base64Data,
-            }),
-          });
-
-          if (apiRes.ok) {
-            return;
-          }
-          const errData = await apiRes.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${apiRes.status}`);
+        if (apiRes.ok) {
+          return;
         }
+        const errData = await apiRes.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${apiRes.status}`);
       } catch (err) {
         if (attempt === retries) throw err;
         await delay(1000 * Math.pow(2, attempt - 1));
@@ -129,8 +101,10 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
     setUploadProgress(5);
     setCurrentFileIdx(0);
     setUploadSuccess(false);
+    setUploadError(null);
 
     let completedCount = 0;
+    const failedFiles: File[] = [];
     const queue = [...selectedFiles];
 
     const worker = async () => {
@@ -140,7 +114,8 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
         try {
           await uploadFileToVercel(file, 3);
         } catch (e) {
-          // Handled quietly
+          console.error(`Upload failed for ${file.name}:`, e);
+          failedFiles.push(file);
         } finally {
           completedCount++;
           setCurrentFileIdx(completedCount);
@@ -153,8 +128,14 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
     await Promise.all(workers);
 
     setIsUploading(false);
-    setUploadSuccess(true);
-    setSelectedFiles([]);
+
+    if (failedFiles.length > 0) {
+      setUploadError(`${failedFiles.length} file(s) failed to upload. Please check network connection and try again.`);
+      setSelectedFiles(failedFiles);
+    } else {
+      setUploadSuccess(true);
+      setSelectedFiles([]);
+    }
   };
 
   return (
@@ -240,7 +221,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                   Choose Files From Phone / PC
                 </button>
 
-                {/* Upload Success Banner */}
+                {/* Upload Banners */}
                 <AnimatePresence>
                   {uploadSuccess && (
                     <motion.div
@@ -251,6 +232,16 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
                     >
                       <CheckCircle2 size={16} className="text-green-600 shrink-0" />
                       <span>Uploaded directly into Google Drive! 🎉</span>
+                    </motion.div>
+                  )}
+                  {uploadError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="p-3 rounded-xl bg-red-50 border border-red-300 text-red-800 text-xs font-semibold flex items-center justify-center gap-1.5"
+                    >
+                      <span>⚠️ {uploadError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
