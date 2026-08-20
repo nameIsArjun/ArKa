@@ -69,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     oauth2Client.setCredentials({ refresh_token: refreshToken });
 
     if (isResumable) {
-      // Get OAuth2 Access Token for direct browser-to-Google streaming (bypasses 4.5MB Vercel limit for videos!)
+      // Get OAuth2 Access Token for direct browser-to-Google streaming (bypasses 4.5MB Vercel limit for videos & large photos!)
       const tokenRes = await oauth2Client.getAccessToken();
       const accessToken = tokenRes.token;
 
@@ -84,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json; charset=UTF-8',
-            'X-Upload-Content-Type': mimeType || 'video/mp4',
+            'X-Upload-Content-Type': mimeType || 'application/octet-stream',
           },
           body: JSON.stringify({
             name: filename,
@@ -106,6 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         success: true,
         uploadUrl,
+        accessToken,
         source: 'google-cloud-direct-resumable',
       });
     }

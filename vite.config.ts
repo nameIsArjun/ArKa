@@ -87,7 +87,7 @@ export default defineConfig({
                     headers: {
                       Authorization: `Bearer ${accessToken}`,
                       'Content-Type': 'application/json; charset=UTF-8',
-                      'X-Upload-Content-Type': mimeType || 'video/mp4',
+                      'X-Upload-Content-Type': mimeType || 'application/octet-stream',
                     },
                     body: JSON.stringify({
                       name: filename,
@@ -105,7 +105,7 @@ export default defineConfig({
 
                 const uploadUrl = googleRes.headers.get('location');
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: true, uploadUrl, source: 'vite-local-direct-resumable' }));
+                res.end(JSON.stringify({ success: true, uploadUrl, accessToken, source: 'vite-local-direct-resumable' }));
                 return;
               }
 

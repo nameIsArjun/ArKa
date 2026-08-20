@@ -63,25 +63,59 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const uploadFileToVercel = async (file: File, retries: number = 3): Promise<void> => {
-    const base64Data = await getFileBase64(file);
+    // For files > 2.5 MB (large iPhone photos & videos), use Resumable Direct Streaming (0 Vercel 4.5MB limit, 0 CORS error!)
+    const isLargeFile = file.size > 2.5 * 1024 * 1024;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const apiRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
-            mimeType: file.type || 'image/jpeg',
-            base64: base64Data,
-          }),
-        });
+        if (isLargeFile) {
+          const apiRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              mimeType: file.type || 'application/octet-stream',
+              isResumable: true,
+            }),
+          });
 
-        if (apiRes.ok) {
-          return;
+          if (apiRes.ok) {
+            const data = await apiRes.json();
+            if (data.uploadUrl && data.accessToken) {
+              const uploadRes = await fetch(data.uploadUrl, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Bearer ${data.accessToken}`,
+                  'Content-Type': file.type || 'application/octet-stream',
+                },
+                body: file,
+              });
+
+              if (uploadRes.ok || uploadRes.status === 200 || uploadRes.status === 201) {
+                return;
+              }
+            }
+          }
+          const errData = await apiRes.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${apiRes.status}`);
+        } else {
+          const base64Data = await getFileBase64(file);
+          const apiRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              mimeType: file.type || 'image/jpeg',
+              base64: base64Data,
+            }),
+          });
+
+          if (apiRes.ok) {
+            return;
+          }
+          const errData = await apiRes.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${apiRes.status}`);
         }
-        const errData = await apiRes.json().catch(() => ({}));
-        throw new Error(errData.error || `HTTP ${apiRes.status}`);
       } catch (err) {
         if (attempt === retries) throw err;
         await delay(1000 * Math.pow(2, attempt - 1));
