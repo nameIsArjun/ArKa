@@ -4,22 +4,19 @@ import { CountdownTimer } from './CountdownTimer';
 import { MandalaPattern, OrnamentalDivider } from './MandalaPattern';
 import { motion } from 'framer-motion';
 import { Calendar, Sparkles } from 'lucide-react';
-import { triggerIcsDownload, getGoogleCalendarUrl } from '../utils/calendarHelper';
+import { autoAddCalendarEvent } from '../utils/calendarHelper';
 
 export const SaveTheDateView: React.FC = () => {
-  // Download Safari-compatible .ics reminder file + Google Calendar fallback for Save The Date
+  // Auto-detects device & triggers native calendar download or Google launch
   const downloadSaveTheDateIcs = () => {
-    const params = {
+    autoAddCalendarEvent({
       id: 'save-the-date',
       title: 'Save The Date: Arjun Puri & Kanishka Dhir Wedding',
       description: 'Save the date for the wedding of Arjun Puri & Kanishka Dhir!',
       dateStr: 'Thursday, November 12, 2026',
       venueName: 'Anutham Hotel & Resort',
       address: 'Jammu, J&K',
-    };
-
-    triggerIcsDownload(params);
-    window.open(getGoogleCalendarUrl(params), '_blank', 'noopener,noreferrer');
+    });
   };
 
   return (

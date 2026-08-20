@@ -78,7 +78,6 @@ export function triggerIcsDownload(evt: CalendarEventParams) {
   ].join('\r\n');
 
   try {
-    // 1. Try Blob URL first
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -90,7 +89,6 @@ export function triggerIcsDownload(evt: CalendarEventParams) {
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 200);
   } catch {
-    // 2. Fallback to base64 Data URI for Safari security restrictions
     const base64Content = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(icsContent))) : '';
     const dataUri = 'data:text/calendar;charset=utf-8;base64,' + base64Content;
     const link = document.createElement('a');
@@ -99,5 +97,23 @@ export function triggerIcsDownload(evt: CalendarEventParams) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+}
+
+/**
+ * Auto-detects device/browser and triggers the native calendar seamlessly without user prompt:
+ * - Apple (iOS / macOS / Safari) -> Triggers Apple Calendar (.ics)
+ * - Android / Windows / Chrome -> Opens Google Calendar directly
+ */
+export function autoAddCalendarEvent(evt: CalendarEventParams) {
+  const isAppleDevice =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod|Macintosh|MacIntel/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+  if (isAppleDevice) {
+    triggerIcsDownload(evt);
+  } else {
+    window.open(getGoogleCalendarUrl(evt), '_blank', 'noopener,noreferrer');
   }
 }
