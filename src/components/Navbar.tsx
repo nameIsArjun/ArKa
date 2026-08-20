@@ -38,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Events', href: '#itinerary', show: true },
     { label: 'Entourage', href: '#family', show: showPillarsOfLove },
     { label: 'Gallery', href: '#gallery', show: showVisualMemories },
-    { label: 'Guestbook', href: '#guestbook', show: true },
+    { label: 'Blessings', href: '#blessings', show: true },
   ].filter((link) => link.show);
 
   return (

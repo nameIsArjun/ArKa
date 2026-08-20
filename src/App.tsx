@@ -12,6 +12,7 @@ import { GuestbookSection } from './components/GuestbookSection';
 import { Footer } from './components/Footer';
 import { GlobalPetalsOverlay } from './components/GlobalPetalsOverlay';
 import { SharedPhotoDrive } from './components/SharedPhotoDrive';
+import { PhotoUploadPage } from './components/PhotoUploadPage';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
 
 const COOKIE_KEY = 'arka_wedding_guest_side';
@@ -283,6 +284,48 @@ export function App() {
   const [isAdmin] = useState<boolean>(initialRole.isAdmin);
   const [isPhotoDriveOpen, setIsPhotoDriveOpen] = useState<boolean>(false);
   
+  // Check initial URL pathname (/photos)
+  const getInitialPage = (): 'home' | 'photos' => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      if (path === '/photos' || path === '/photos/' || path.startsWith('/photo')) {
+        return 'photos';
+      }
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('page')?.toLowerCase() === 'photos') {
+        return 'photos';
+      }
+    }
+    return 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState<'home' | 'photos'>(getInitialPage);
+
+  // Sync back/forward browser history buttons
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path === '/photos' || path === '/photos/' || path.startsWith('/photo')) {
+        setCurrentPage('photos');
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToPage = (page: 'home' | 'photos') => {
+    setCurrentPage(page);
+    if (typeof window !== 'undefined') {
+      const newPath = page === 'photos' ? '/photos' : '/';
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({}, '', newPath);
+      }
+    }
+  };
+
   const isSaveTheDateMode = getSaveTheDateMode();
   const showPillarsOfLove = getShowPillarsOfLove();
   const showVisualMemories = getShowVisualMemories();
@@ -312,22 +355,29 @@ export function App() {
           )}
         </AnimatePresence>
 
-        {/* Sticky Header Navbar */}
-        <Navbar
-          onReplaySplash={() => setShowSplash(true)}
-          onOpenPhotoDrive={showPhotoDrive ? () => setIsPhotoDriveOpen(true) : undefined}
-          isSaveTheDateMode={isSaveTheDateMode}
-          showPillarsOfLove={showPillarsOfLove}
-          showVisualMemories={showVisualMemories}
-          showPhotoDrive={showPhotoDrive}
-        />
-
-        {/* Main Content: Either Save The Date Landing View OR Full Interactive Wedding Site */}
-        {isSaveTheDateMode ? (
-          <div className="pt-20 sm:pt-24 min-h-[85vh] flex items-center justify-center">
-            <SaveTheDateView />
-          </div>
+        {/* Render Dedicated Photo Upload Page (Form + Footer Only) OR Main Landing Site */}
+        {currentPage === 'photos' ? (
+          <>
+            <PhotoUploadPage />
+            <Footer />
+          </>
         ) : (
+          <>
+            {/* Sticky Header Navbar */}
+            <Navbar
+              onReplaySplash={() => setShowSplash(true)}
+              onOpenPhotoDrive={showPhotoDrive ? () => navigateToPage('photos') : undefined}
+              isSaveTheDateMode={isSaveTheDateMode}
+              showPillarsOfLove={showPillarsOfLove}
+              showVisualMemories={showVisualMemories}
+              showPhotoDrive={showPhotoDrive}
+            />
+
+            {isSaveTheDateMode ? (
+              <div className="pt-20 sm:pt-24 min-h-[85vh] flex items-center justify-center">
+                <SaveTheDateView />
+              </div>
+            ) : (
           <>
             {/* Hero Header Section */}
             <HeroHeader />
@@ -355,6 +405,8 @@ export function App() {
 
         {/* Royal Footer */}
         <Footer />
+      </>
+    )}
       </div>
     </LayoutGroup>
   );

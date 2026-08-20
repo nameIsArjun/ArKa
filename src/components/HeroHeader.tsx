@@ -9,7 +9,7 @@ import { WEDDING_DETAILS } from '../data/weddingData';
 export const HeroHeader: React.FC = () => {
   return (
     <section className="relative min-h-[95vh] flex flex-col items-center justify-center pt-28 pb-16 px-4 overflow-hidden bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#F4EDE2] text-[#2D3748]">
-      
+
       {/* 1. Background Watermark Mandala with Dual Rotation */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
         <MandalaPattern size={720} className="animate-spin-slow text-[#D4AF37]" />
@@ -27,7 +27,7 @@ export const HeroHeader: React.FC = () => {
       <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
 
       <div className="relative z-30 max-w-4xl mx-auto text-center flex flex-col items-center">
-        
+
         {/* Sacred Sanskrit Invocation Shlok */}
         <motion.div
           initial={{ opacity: 0, y: -15 }}

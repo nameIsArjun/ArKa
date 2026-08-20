@@ -6,16 +6,16 @@ import { Sparkles, Quote } from 'lucide-react';
 
 export const GuestbookSection: React.FC = () => {
   return (
-    <section id="guestbook" className="py-16 px-4 max-w-5xl mx-auto">
+    <section id="blessings" className="py-16 px-4 max-w-5xl mx-auto">
       {/* Section Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#008070] font-bold mb-2">
           <Sparkles size={14} className="text-[#B38728]" />
-          <span>Warmest Wishes</span>
+          <span>Blessings</span>
         </div>
 
         <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0A4A40] tracking-tight">
-          Blessings & Love Wall
+          Blessings
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[#2D3748] max-w-xl mx-auto font-normal">
           Heartfelt prayers, family blessings, and warm wishes for Arjun Puri & Kanishka Dhir.
