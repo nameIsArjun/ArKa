@@ -6,7 +6,7 @@ import { OrnamentalDivider } from './MandalaPattern';
 import { Clock, MapPin, Sparkles, ExternalLink, Download, Shirt, X, Lock, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAssetUrl } from '../utils/assetHelper';
 import { EventBackgroundAnimation } from './EventBackgroundAnimation';
-import { triggerIcsDownload } from '../utils/calendarHelper';
+import { triggerIcsDownload, getGoogleCalendarUrl } from '../utils/calendarHelper';
 
 // Swiper React Components & Modules
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -109,9 +109,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
     swiperRef.current?.slidePrev();
   };
 
-  // Triggers Safari and Cross-Browser compatible iCalendar (.ics) download for an event
+  // Triggers Safari and Cross-Browser compatible iCalendar (.ics) download + Google Calendar fallback for an event
   const downloadIcs = (evt: EventItem) => {
-    triggerIcsDownload({
+    const params = {
       id: evt.id,
       title: evt.title,
       subtitle: evt.subtitle,
@@ -120,7 +120,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
       venueName: evt.venueName,
       address: evt.address,
       dressCode: evt.dressCode,
-    });
+    };
+
+    triggerIcsDownload(params);
+    window.open(getGoogleCalendarUrl(params), '_blank', 'noopener,noreferrer');
   };
 
   return (

@@ -37,6 +37,18 @@ export function getIcsTimestamps(dateStr: string): { dtStart: string; dtEnd: str
 }
 
 /**
+ * Generates Google Calendar web event URL
+ */
+export function getGoogleCalendarUrl(evt: CalendarEventParams): string {
+  const { dtStart, dtEnd } = getIcsTimestamps(evt.dateStr);
+  const title = `${evt.title} - Arjun & Kanishka Wedding`;
+  const details = `${evt.subtitle ? evt.subtitle + '\n' : ''}${evt.description}${evt.dressCode ? '\nDress Code: ' + evt.dressCode : ''}`;
+  const location = [evt.venueName, evt.address].filter(Boolean).join(', ');
+
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dtStart}/${dtEnd}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+}
+
+/**
  * Safari & Cross-Browser Compatible iCalendar (.ics) Download Trigger
  */
 export function triggerIcsDownload(evt: CalendarEventParams) {
@@ -65,27 +77,27 @@ export function triggerIcsDownload(evt: CalendarEventParams) {
     'END:VCALENDAR'
   ].join('\r\n');
 
-  // Detect iOS / Safari
-  const isSafari =
-    typeof navigator !== 'undefined' &&
-    (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) ||
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-
-  if (isSafari) {
-    // Mobile Safari / iOS Safari / macOS Safari: data URI or window.location triggers Apple Calendar directly!
-    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
-    window.location.href = dataUri;
-  } else {
-    // Chrome / Edge / Firefox / Android
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+  try {
+    // 1. Try Blob URL first
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${evt.id}-arjun-kanishka-wedding.ics`);
+    link.download = `${evt.id}-arjun-kanishka-wedding.ics`;
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 200);
+  } catch {
+    // 2. Fallback to base64 Data URI for Safari security restrictions
+    const base64Content = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(icsContent))) : '';
+    const dataUri = 'data:text/calendar;charset=utf-8;base64,' + base64Content;
+    const link = document.createElement('a');
+    link.href = dataUri;
+    link.download = `${evt.id}-arjun-kanishka-wedding.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }
