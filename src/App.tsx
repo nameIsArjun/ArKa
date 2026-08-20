@@ -14,6 +14,7 @@ import { GlobalPetalsOverlay } from './components/GlobalPetalsOverlay';
 import { SharedPhotoDrive } from './components/SharedPhotoDrive';
 import { PhotoUploadPage } from './components/PhotoUploadPage';
 import { LayoutGroup, AnimatePresence } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 
 const COOKIE_KEY = 'arka_wedding_guest_side';
 const STORAGE_KEY = 'arka_wedding_guest_side_v1';
@@ -408,6 +409,7 @@ export function App() {
       </>
     )}
       </div>
+      <Analytics />
     </LayoutGroup>
   );
 }
