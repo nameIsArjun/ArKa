@@ -252,7 +252,7 @@ export const PhotoUploadPage: React.FC<PhotoUploadPageProps> = () => {
               Select Photos & Videos
             </h3>
             <p className="text-xs text-[#2D3748]/70 mt-1 max-w-sm">
-              Files chosen here are uploaded directly into Google Drive with 0 tabs opening.
+              Files chosen here are uploaded into the Google Drive.
             </p>
 
             <button
