@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, ExternalLink, Sparkles, Image as ImageIcon, X, CheckCircle2, Camera, ShieldCheck, Maximize2, Download, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { WEDDING_DETAILS, UPLOAD_CONCURRENCY_LIMIT } from '../data/weddingData';
+import { triggerWeddingPetalBurst } from '../utils/confettiHelper';
 
 // Swiper Components & Modules
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -263,6 +264,7 @@ export const PhotoUploadPage: React.FC = () => {
       setPendingFiles(failedItems);
     } else {
       setUploadSuccess(true);
+      triggerWeddingPetalBurst();
       setPendingFiles([]);
       fetchDrivePhotos();
     }
@@ -316,26 +318,26 @@ export const PhotoUploadPage: React.FC = () => {
           <h1 className="font-serif text-4xl sm:text-6xl font-extrabold text-[#0A4A40] tracking-[0.15em] uppercase">
             GALLERY
           </h1>
-          <p className="text-sm sm:text-base text-[#2D3748]/80 font-serif italic tracking-wide">
-            Share your moments with us
+          <p className="text-sm sm:text-base text-[#2D3748]/85 font-serif italic tracking-wide max-w-xl mx-auto">
+            Capture the laughter, dance moves, and candid smiles — share your memories from the celebration!
           </p>
 
           {/* DUAL ACTION BUTTONS: UPLOAD PHOTOS & TAKE PHOTO */}
           <div className="pt-6 flex flex-wrap items-center justify-center gap-4">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 rounded-xl bg-[#FFFDF9] border-2 border-[#D4AF37] text-[#0A4A40] hover:bg-[#D4AF37] hover:text-[#FFFDF9] font-serif font-extrabold text-xs uppercase tracking-[0.15em] transition-all shadow-md flex items-center gap-2.5 cursor-pointer active:scale-95"
+              className="px-6 py-3 rounded-full bg-[#FFFDF9] border-2 border-[#D4AF37] text-[#0A4A40] hover:bg-[#D4AF37] hover:text-[#FFFDF9] font-serif font-extrabold text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
             >
               <ImageIcon size={16} className="text-[#B38728]" />
-              <span>UPLOAD PHOTOS</span>
+              <span>Share Photos</span>
             </button>
 
             <button
               onClick={() => cameraInputRef.current?.click()}
-              className="px-6 py-3 rounded-xl bg-[#FFFDF9] border-2 border-[#D4AF37] text-[#0A4A40] hover:bg-[#D4AF37] hover:text-[#FFFDF9] font-serif font-extrabold text-xs uppercase tracking-[0.15em] transition-all shadow-md flex items-center gap-2.5 cursor-pointer active:scale-95"
+              className="px-6 py-3 rounded-full bg-[#FFFDF9] border-2 border-[#D4AF37] text-[#0A4A40] hover:bg-[#D4AF37] hover:text-[#FFFDF9] font-serif font-extrabold text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
             >
               <Camera size={16} className="text-[#008070]" />
-              <span>TAKE PHOTO</span>
+              <span>Take picture</span>
             </button>
           </div>
         </motion.div>
@@ -502,7 +504,7 @@ export const PhotoUploadPage: React.FC = () => {
                 No Shared Photos Yet
               </h3>
               <p className="text-xs sm:text-sm text-[#2D3748]/70 max-w-md mx-auto font-serif leading-relaxed">
-                Be the first to share your favorite clicks from Arjun & Kanishka&apos;s wedding celebrations! Tap <strong>UPLOAD PHOTOS</strong> or <strong>TAKE PHOTO</strong> above.
+                Be the first to share your favorite clicks from Arjun & Kanishka&apos;s wedding celebrations! Tap <strong>SHARE PHOTOS</strong> or <strong>TAKE PICTURE</strong> above.
               </p>
             </div>
           ) : (
@@ -513,9 +515,8 @@ export const PhotoUploadPage: React.FC = () => {
                   whileHover={{ scale: 1.03 }}
                   transition={{ duration: 0.2 }}
                   onClick={() => openLightbox(idx)}
-                  className={`relative rounded-2xl overflow-hidden shadow-md border-2 border-[#D4AF37]/40 bg-[#FFFDF9] cursor-pointer group ${
-                    photo.isPolaroid ? 'p-2 pb-4 border-[#D4AF37] shadow-xl' : 'aspect-square'
-                  }`}
+                  className={`relative rounded-2xl overflow-hidden shadow-md border-2 border-[#D4AF37]/40 bg-[#FFFDF9] cursor-pointer group ${photo.isPolaroid ? 'p-2 pb-4 border-[#D4AF37] shadow-xl' : 'aspect-square'
+                    }`}
                 >
                   <div className="w-full h-full overflow-hidden rounded-xl bg-black/5 relative aspect-square">
                     <img
@@ -619,9 +620,8 @@ export const PhotoUploadPage: React.FC = () => {
                 onClick={() => lightboxSwiperRef.current?.slidePrev()}
                 disabled={currentLightboxIndex === 0}
                 aria-label="Previous Photo"
-                className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-[#D4AF37]/60 text-white shadow-2xl flex items-center justify-center transition-all z-30 cursor-pointer ${
-                  currentLightboxIndex === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#D4AF37] hover:text-black active:scale-95'
-                }`}
+                className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-[#D4AF37]/60 text-white shadow-2xl flex items-center justify-center transition-all z-30 cursor-pointer ${currentLightboxIndex === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#D4AF37] hover:text-black active:scale-95'
+                  }`}
               >
                 <ChevronLeft size={26} />
               </button>
@@ -631,9 +631,8 @@ export const PhotoUploadPage: React.FC = () => {
                 onClick={() => lightboxSwiperRef.current?.slideNext()}
                 disabled={currentLightboxIndex === drivePhotos.length - 1}
                 aria-label="Next Photo"
-                className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-[#D4AF37]/60 text-white shadow-2xl flex items-center justify-center transition-all z-30 cursor-pointer ${
-                  currentLightboxIndex === drivePhotos.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#D4AF37] hover:text-black active:scale-95'
-                }`}
+                className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-[#D4AF37]/60 text-white shadow-2xl flex items-center justify-center transition-all z-30 cursor-pointer ${currentLightboxIndex === drivePhotos.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-[#D4AF37] hover:text-black active:scale-95'
+                  }`}
               >
                 <ChevronRight size={26} />
               </button>

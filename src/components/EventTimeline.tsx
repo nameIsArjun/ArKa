@@ -185,10 +185,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
             </div>
 
             <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#0A4A40]">
-              Unlock Your Personalized Itinerary
+              Whose side are you celebrating with?
             </h3>
             <p className="text-xs sm:text-sm text-[#2D3748]/80 max-w-md mx-auto leading-relaxed font-serif">
-              Please choose whether you are celebrating with <strong>Team Groom</strong> or <strong>Team Bride</strong> to reveal your customized schedule of rituals & grand galas.
+              Choose whether you are joining with the <strong>Groom's family</strong> or <strong>Bride's family</strong> to view your celebration itinerary.
             </p>
 
             <div className="pt-2">
@@ -196,7 +196,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                 onClick={() => setShowTeamModal(true)}
                 className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-widest shadow-xl hover:brightness-105 transition-all cursor-pointer"
               >
-                Choose Team Groom or Team Bride
+                Select Groom or Bride Side
               </button>
             </div>
           </div>
@@ -205,9 +205,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
         /* INTERACTIVE CARD SLIDER STAGE ONLY */
         <div className="space-y-6">
 
-          {/* MOBILE ONLY: HORIZONTAL INSTAGRAM STORY BAR */}
-          <div className="block lg:hidden sticky top-20 z-30 bg-[#FFFDF9]/95 backdrop-blur-md py-3 px-3 rounded-2xl border border-[#D4AF37]/50 shadow-lg mb-4">
-            <div className="flex items-center gap-4 overflow-x-auto scrollbar-none py-1 px-1">
+          {/* MOBILE ONLY: HORIZONTAL STORY AVATAR BAR */}
+          <div className="block lg:hidden sticky top-20 z-30 bg-[#FFFDF9]/95 backdrop-blur-md py-3 px-3 rounded-2xl border border-[#D4AF37]/50 shadow-md mb-4">
+            <div className="flex items-center gap-3.5 overflow-x-auto scrollbar-none py-1 px-1">
               {filteredEvents.map((evt, idx) => {
                 const artUrl = getEventArtwork(evt.id);
                 const isActive = activeIndex === idx;
@@ -216,19 +216,20 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                   <button
                     key={evt.id}
                     onClick={() => selectEventIndex(idx)}
-                    className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer"
+                    className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
                   >
                     <div
-                      className={`relative w-14 h-14 rounded-full p-0.5 transition-all duration-300 ${isActive
-                        ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] shadow-md scale-105 ring-2 ring-[#D4AF37]'
-                        : 'bg-[#D4AF37]/30 hover:bg-[#D4AF37]/60'
-                        }`}
+                      className={`relative w-14 h-14 rounded-full p-0.5 transition-all duration-300 ${
+                        isActive
+                          ? 'ring-2 ring-[#D4AF37] ring-offset-2 ring-offset-[#FFFDF9] scale-105 shadow-md'
+                          : 'opacity-65 hover:opacity-100'
+                      }`}
                     >
-                      <div className="w-full h-full rounded-full overflow-hidden bg-[#FFFDF9] border-2 border-[#FFFDF9] p-0.5 flex items-center justify-center">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-[#FAF6F0] p-0.5 flex items-center justify-center">
                         <img
                           src={artUrl}
                           alt={evt.title}
-                          className="w-full h-full object-contain object-center rounded-full group-hover:scale-110 transition-transform duration-300"
+                          className="w-full h-full object-contain object-center rounded-full"
                         />
                       </div>
                       <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0A4A40] text-[#FFFDF9] border border-[#D4AF37] text-[9px] font-bold flex items-center justify-center">
@@ -237,8 +238,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                     </div>
 
                     <span
-                      className={`text-[10px] font-serif font-extrabold max-w-[65px] truncate transition-colors ${isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]/70'
-                        }`}
+                      className={`text-[10px] font-serif font-bold max-w-[65px] truncate transition-colors ${
+                        isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]/60'
+                      }`}
                     >
                       {getEventShortTitle(evt)}
                     </span>
@@ -274,19 +276,21 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                     <button
                       key={evt.id}
                       onClick={() => selectEventIndex(idx)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 text-left cursor-pointer border-2 ${isActive
-                        ? 'bg-gradient-to-r from-[#FAF6F0] via-[#FFFDF9] to-[#FAF6F0] border-[#D4AF37] shadow-md'
-                        : 'bg-[#FFFDF9] border-transparent hover:bg-[#FAF6F0]/60 hover:border-[#D4AF37]/30'
-                        }`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 text-left cursor-pointer border-2 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[#FAF6F0] via-[#FFFDF9] to-[#FAF6F0] border-[#D4AF37] shadow-md'
+                          : 'bg-[#FFFDF9] border-transparent hover:bg-[#FAF6F0]/60 hover:border-[#D4AF37]/30'
+                      }`}
                     >
                       {/* Vertical Story Avatar Circle */}
                       <div
-                        className={`relative w-12 h-12 rounded-full shrink-0 p-0.5 transition-all ${isActive
-                          ? 'bg-gradient-to-tr from-[#D4AF37] via-[#F3E5AB] to-[#0A4A40] ring-2 ring-[#D4AF37]'
-                          : 'bg-[#D4AF37]/30'
-                          }`}
+                        className={`relative w-12 h-12 rounded-full shrink-0 p-0.5 transition-all ${
+                          isActive
+                            ? 'ring-2 ring-[#D4AF37] ring-offset-2 ring-offset-[#FFFDF9]'
+                            : 'opacity-70'
+                        }`}
                       >
-                        <div className="w-full h-full rounded-full overflow-hidden bg-[#FFFDF9] p-0.5 flex items-center justify-center">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-[#FAF6F0] p-0.5 flex items-center justify-center">
                           <img
                             src={artUrl}
                             alt={evt.title}
@@ -301,8 +305,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                       {/* Event Title & Date Info */}
                       <div className="min-w-0 flex-1">
                         <span
-                          className={`font-serif font-extrabold text-sm block truncate ${isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]'
-                            }`}
+                          className={`font-serif font-extrabold text-sm block truncate ${
+                            isActive ? 'text-[#0A4A40]' : 'text-[#2D3748]'
+                          }`}
                         >
                           {getEventShortTitle(evt)}
                         </span>
@@ -321,84 +326,50 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
               </div>
             </div>
 
-            {/* RIGHT STAGE AREA WITH SWIPER DYNAMIC AUTO-HEIGHT */}
-            <div className="lg:col-span-8 relative w-full h-auto rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
+            {/* RIGHT STAGE AREA WITH CLEAN LUXURY ELEVATION */}
+            <div className="lg:col-span-8 relative w-full h-auto">
+              <div className="relative w-full h-auto rounded-3xl overflow-hidden shadow-[0_15px_35px_-10px_rgba(212,175,55,0.18),0_10px_20px_-10px_rgba(10,74,64,0.08)] border-2 border-[#D4AF37]/60 bg-[#FFFDF9]">
+                {/* SWIPER CONTAINER WITH MOBILE HORIZONTAL SWIPING & DYNAMIC HEIGHT */}
+                <Swiper
+                  direction="horizontal"
+                  autoHeight={true}
+                  touchReleaseOnEdges={true}
+                  onSwiper={(swiper) => (swiperRef.current = swiper)}
+                  onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+                  modules={[Keyboard]}
+                  keyboard={{ enabled: true }}
+                  grabCursor={true}
+                  className="w-full h-auto"
+                >
+                  {filteredEvents.map((evt, idx) => (
+                    <SwiperSlide key={evt.id} className="w-full h-auto bg-[#FFFDF9]">
+                      <div className="w-full h-auto flex flex-col text-left relative overflow-hidden">
 
-              {/* SWIPER CONTAINER WITH MOBILE HORIZONTAL SWIPING & DYNAMIC HEIGHT */}
-              <Swiper
-                direction="horizontal"
-                autoHeight={true}
-                touchReleaseOnEdges={true}
-                onSwiper={(swiper) => (swiperRef.current = swiper)}
-                onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
-                modules={[Keyboard]}
-                keyboard={{ enabled: true }}
-                grabCursor={true}
-                className="w-full h-auto"
-              >
-                {filteredEvents.map((evt, idx) => (
-                  <SwiperSlide key={evt.id} className="w-full h-auto bg-[#FFFDF9]">
-                    <div className="w-full h-auto flex flex-col text-left relative overflow-hidden">
+                        {/* Stage Hero Artwork Image Header */}
+                        <div className="relative h-60 sm:h-72 bg-[#FAF6F0] border-b-2 border-[#D4AF37]/30 flex items-center justify-center p-3 shrink-0">
+                          <img
+                            src={getEventArtwork(evt.id)}
+                            alt={evt.title}
+                            className="w-full h-full object-contain object-center"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/90 via-[#0A4A40]/25 to-transparent pointer-events-none" />
 
-                      {/* Dynamic Event Background Particle Backdrop */}
-                      <EventBackgroundAnimation eventId={evt.id} category={evt.category} isInView={true} />
+                          {/* Date Tag */}
+                          <div className="absolute top-4 left-4 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37]/60 text-[#0A4A40] text-xs font-serif font-extrabold shadow-sm flex items-center gap-1.5 z-20">
+                            <Calendar size={13} className="text-[#B38728]" />
+                            <span>{evt.date}</span>
+                          </div>
 
-                      {/* Stage Hero Artwork Image Header */}
-                      <div className="relative h-56 sm:h-72 bg-[#FFFDF9] border-b-2 border-[#D4AF37]/40 flex items-center justify-center p-3 shrink-0">
-                        <img
-                          src={getEventArtwork(evt.id)}
-                          alt={evt.title}
-                          className="w-full h-full object-contain object-center"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A4A40]/90 via-[#0A4A40]/20 to-transparent pointer-events-none" />
-
-                        {/* Date Tag */}
-                        <div className="absolute top-4 left-4 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-md flex items-center gap-1.5 z-20">
-                          <Calendar size={13} className="text-[#B38728]" />
-                          <span>{evt.date}</span>
+                          {/* Title Overlay */}
+                          <div className="absolute bottom-4 left-4 right-4 text-left">
+                            <span className="text-[10px] uppercase tracking-widest text-[#F3E5AB] font-bold block">
+                              {evt.subtitle}
+                            </span>
+                            <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#FFFDF9]">
+                              {evt.title}
+                            </h3>
+                          </div>
                         </div>
-
-                        {/* Top Right Counter Badge */}
-                        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border border-[#D4AF37] text-[#0A4A40] text-xs font-serif font-extrabold shadow-md z-20">
-                          {idx + 1} of {filteredEvents.length}
-                        </div>
-
-                        {/* ARTWORK CENTER LEFT FLOATING PREVIOUS ARROW (MOBILE ONLY) */}
-                        <button
-                          disabled={activeIndex === 0}
-                          onClick={handlePrev}
-                          aria-label="Previous Event"
-                          className={`lg:hidden absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === 0
-                            ? 'opacity-30 cursor-not-allowed text-gray-400'
-                            : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
-                            }`}
-                        >
-                          <ChevronLeft size={20} />
-                        </button>
-
-                        {/* ARTWORK CENTER RIGHT FLOATING NEXT ARROW (MOBILE ONLY) */}
-                        <button
-                          disabled={activeIndex === filteredEvents.length - 1}
-                          onClick={handleNext}
-                          aria-label="Next Event"
-                          className={`lg:hidden absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#FFFDF9]/95 backdrop-blur-md border-2 border-[#D4AF37] shadow-xl flex items-center justify-center transition-all z-30 cursor-pointer ${activeIndex === filteredEvents.length - 1
-                            ? 'opacity-30 cursor-not-allowed text-gray-400'
-                            : 'hover:bg-[#D4AF37] text-[#0A4A40] hover:text-white active:scale-95'
-                            }`}
-                        >
-                          <ChevronRight size={20} />
-                        </button>
-
-                        {/* Title Overlay */}
-                        <div className="absolute bottom-4 left-4 right-4 text-left">
-                          <span className="text-[10px] uppercase tracking-widest text-[#F3E5AB] font-bold block">
-                            {evt.subtitle}
-                          </span>
-                          <h3 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#FFFDF9]">
-                            {evt.title}
-                          </h3>
-                        </div>
-                      </div>
 
                       {/* Stage Card Details Body */}
                       <div className="p-5 sm:p-6 space-y-4 relative z-10 flex flex-col justify-between">
@@ -478,7 +449,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                   </SwiperSlide>
                 ))}
               </Swiper>
-
+              </div>
             </div>
 
             {/* OUTSIDE CARD SENIOR-FRIENDLY PREVIOUS & NEXT EVENT NAVIGATION BAR (MOBILE ONLY) */}
@@ -539,14 +510,14 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
 
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF6F0] border border-[#D4AF37]/50 text-[#0A4A40] text-xs font-serif font-extrabold shadow-xs mb-2">
                 <Sparkles size={14} className="text-[#B38728]" />
-                <span>Guest Personalization</span>
+                <span>Welcome Cherished Guests</span>
               </div>
 
               <h3 className="font-serif text-2xl sm:text-4xl font-extrabold text-[#0A4A40]">
                 Which side are you celebrating with?
               </h3>
               <p className="text-xs sm:text-sm text-[#2D3748]/80 max-w-md mx-auto mt-1 font-normal">
-                Select your side to unlock your family's rituals & grand wedding celebrations!
+                Select your side to view your family's special rituals and joint celebrations!
               </p>
 
               {/* 2-Column Vertical Split Row (Side-by-Side on both Mobile & Desktop) */}

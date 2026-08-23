@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, ExternalLink, Sparkles, FolderHeart, Image as ImageIcon, X, CheckCircle2, Camera } from 'lucide-react';
 import { WEDDING_DETAILS, UPLOAD_CONCURRENCY_LIMIT } from '../data/weddingData';
 import { OrnamentalDivider } from './MandalaPattern';
+import { triggerWeddingPetalBurst } from '../utils/confettiHelper';
 
 interface SharedPhotoDriveProps {
   isOpen: boolean;
@@ -199,6 +200,7 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
       setSelectedFiles(failedFiles);
     } else {
       setUploadSuccess(true);
+      triggerWeddingPetalBurst();
       setSelectedFiles([]);
     }
   };
@@ -246,10 +248,10 @@ export const SharedPhotoDrive: React.FC<SharedPhotoDriveProps> = ({ isOpen, onCl
               <div className="text-center">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F4EDE2] text-[#0A4A40] text-[11px] font-serif font-bold tracking-widest uppercase mb-2">
                   <Sparkles size={13} className="text-[#D4AF37]" />
-                  <span>Direct Google Drive Upload</span>
+                  <span>Shared Memories Vault</span>
                 </div>
                 <p className="text-xs text-[#2D3748]/80 leading-relaxed font-medium">
-                  Upload your favorite photos & videos directly into Arjun & Kanishka&apos;s Google Drive folder!
+                  Share your favorite candid moments, photos & videos from the celebrations with Arjun & Kanishka!
                 </p>
                 <OrnamentalDivider className="max-w-xs mx-auto my-4" />
               </div>

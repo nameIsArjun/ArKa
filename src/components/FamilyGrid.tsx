@@ -30,7 +30,7 @@ export const FamilyGrid: React.FC<FamilyGridProps> = ({ activeTab }) => {
           Two Families, One Union
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[#2D3748] max-w-xl mx-auto font-normal">
-          Meet the beloved elders, cherished siblings, and lifelong confidants who surround Kanishka Dhir & Arjun Puri with blessings.
+          Meet the beloved elders, cherished siblings, and dearest family members who surround Arjun & Kanishka with love.
         </p>
 
         <OrnamentalDivider className="max-w-md mx-auto" />

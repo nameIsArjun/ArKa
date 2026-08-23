@@ -183,7 +183,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
             <div className="flex items-center justify-between text-xs font-serif font-bold uppercase tracking-widest text-[#8C641D]">
               <span className="flex items-center gap-1.5">
                 <Sparkles size={12} className="text-[#008070]" />
-                Preparing your Wedding Invitation...
+                Unfolding the Royal Invitation...
               </span>
               <span>{progress}%</span>
             </div>

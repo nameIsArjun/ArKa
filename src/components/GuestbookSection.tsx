@@ -3,6 +3,7 @@ import { INITIAL_GUESTBOOK } from '../data/weddingData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OrnamentalDivider } from './MandalaPattern';
 import { Sparkles, Quote, PenTool, CheckCircle2, Trash2, X, ShieldCheck, RefreshCw } from 'lucide-react';
+import { triggerWeddingPetalBurst } from '../utils/confettiHelper';
 
 export interface BlessingItem {
   id: string;
@@ -79,6 +80,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
 
       if (res.ok) {
         setFormSubmitted(true);
+        triggerWeddingPetalBurst();
         fetchBlessings();
       }
     } catch (e) {
@@ -137,14 +139,14 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#008070] font-bold mb-2">
           <Sparkles size={14} className="text-[#B38728]" />
-          <span>Blessings</span>
+          <span>Love & Wishes</span>
         </div>
 
         <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0A4A40] tracking-tight">
-          Blessings & Wishes
+          Words of Love & Blessings
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[#2D3748] max-w-xl mx-auto font-normal">
-          Heartfelt prayers, family blessings, and warm wishes for Arjun Puri & Kanishka Dhir.
+          Leave a heartfelt note, a cherished memory, or warm wishes for Arjun & Kanishka as they begin forever.
         </p>
 
         <OrnamentalDivider className="max-w-md mx-auto my-4" />
@@ -155,8 +157,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
             onClick={() => setIsSubmitModalOpen(true)}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-lg hover:brightness-105 active:scale-98 transition-all flex items-center gap-2 cursor-pointer border border-[#B38728]/40"
           >
-            <PenTool size={16} className="text-[#0A4A40]" />
-            <span>Write a Blessing for Arjun & Kanishka</span>
+            <PenTool size={15} className="text-[#0A4A40]" />
+            <span>Leave a Note for the Couple</span>
           </button>
         </div>
       </div>
@@ -319,55 +321,55 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                 <>
                   <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#008070] font-extrabold mb-1">
                     <PenTool size={15} className="text-[#B38728]" />
-                    <span>Send Your Wishes</span>
+                    <span>Send Your Love</span>
                   </div>
 
                   <h3 className="font-serif text-2xl font-extrabold text-[#0A4A40]">
-                    Write a Blessing
+                    Send Love to Arjun & Kanishka
                   </h3>
                   <p className="text-xs text-[#2D3748]/80 mt-1">
-                    Share your love and warm wishes for Arjun Puri & Kanishka Dhir.
+                    Whether it's a blessing, marriage advice, or a sweet memory, we would love to read your note!
                   </p>
 
                   <form onSubmit={handleGuestSubmit} className="mt-5 space-y-4">
                     <div>
                       <label className="block text-xs font-serif font-bold text-[#0A4A40] uppercase tracking-wider mb-1">
-                        Your Full Name *
+                        Your Name *
                       </label>
                       <input
                         type="text"
                         required
                         value={guestName}
                         onChange={(e) => setGuestName(e.target.value)}
-                        placeholder="e.g. Ramesh Puri & Family"
+                        placeholder="e.g. Ramesh Uncle & Family"
                         className="w-full px-4 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#D4AF37]/50 text-xs text-[#2D3748] focus:outline-none focus:border-[#0A4A40]"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-serif font-bold text-[#0A4A40] uppercase tracking-wider mb-1">
-                        Relation to Bride or Groom *
+                        How do you know the couple? (e.g. Groom's Cousin, College Friend) *
                       </label>
                       <input
                         type="text"
                         required
                         value={guestRelation}
                         onChange={(e) => setGuestRelation(e.target.value)}
-                        placeholder="e.g. Bride's Best Friend, Groom's Cousin, Mama Ji & Mami Ji..."
+                        placeholder="e.g. Bride's Best Friend, Groom's Cousin, Mama Ji..."
                         className="w-full px-4 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#D4AF37]/50 text-xs text-[#2D3748] focus:outline-none focus:border-[#0A4A40]"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-serif font-bold text-[#0A4A40] uppercase tracking-wider mb-1">
-                        Your Blessing / Wish *
+                        Your Note or Blessing *
                       </label>
                       <textarea
                         required
                         rows={4}
                         value={guestMessage}
                         onChange={(e) => setGuestMessage(e.target.value)}
-                        placeholder="May your love grow stronger with every passing day..."
+                        placeholder="Share your blessing, favorite memory, or sweet advice for Arjun & Kanishka..."
                         className="w-full px-4 py-2.5 rounded-xl bg-[#FAF6F0] border border-[#D4AF37]/50 text-xs text-[#2D3748] focus:outline-none focus:border-[#0A4A40] resize-none"
                       />
                     </div>
@@ -377,7 +379,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                       disabled={formSubmitting}
                       className="w-full py-3 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      {formSubmitting ? 'Submitting...' : 'Wish them well'}
+                      {formSubmitting ? 'Sending...' : 'Send With Love & Blessings 💌'}
                     </button>
                   </form>
                 </>
@@ -389,10 +391,10 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
 
                   <div>
                     <h4 className="font-serif text-xl font-extrabold text-[#0A4A40]">
-                      Thank You for Showering Your Blessings! ✨
+                      Thank you for the love! ✨
                     </h4>
                     <p className="text-xs text-[#2D3748]/85 mt-2 leading-relaxed max-w-sm mx-auto font-serif">
-                      Your warm wishes for <strong>Arjun & Kanishka</strong> have been received and will be displayed here soon!
+                      Your sweet words mean the world to us. Your message has been received with love!
                     </p>
                   </div>
 

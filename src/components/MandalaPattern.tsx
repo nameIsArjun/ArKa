@@ -1,14 +1,19 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 export const MandalaPattern: React.FC<{ className?: string; size?: number }> = ({ className = '', size = 300 }) => {
   return (
-    <svg
+    <motion.svg
+      initial={{ scale: 0.85, opacity: 0, rotate: -15 }}
+      whileInView={{ scale: 1, opacity: 0.28, rotate: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] }}
       width={size}
       height={size}
       viewBox="0 0 200 200"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`opacity-25 pointer-events-none select-none ${className}`}
+      className={`pointer-events-none select-none ${className}`}
     >
       <circle cx="100" cy="100" r="96" stroke="url(#goldGradient)" strokeWidth="1" strokeDasharray="4 2" />
       <circle cx="100" cy="100" r="80" stroke="url(#goldGradient)" strokeWidth="0.8" />
@@ -48,13 +53,19 @@ export const MandalaPattern: React.FC<{ className?: string; size?: number }> = (
           <stop offset="100%" stopColor="#B38728" />
         </linearGradient>
       </defs>
-    </svg>
+    </motion.svg>
   );
 };
 
 export const OrnamentalDivider: React.FC<{ title?: string; className?: string }> = ({ title, className = '' }) => {
   return (
-    <div className={`flex items-center justify-center gap-4 my-8 ${className}`}>
+    <motion.div
+      initial={{ opacity: 0, scaleX: 0.7 }}
+      whileInView={{ opacity: 1, scaleX: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      className={`flex items-center justify-center gap-4 my-8 ${className}`}
+    >
       <div className="h-[1px] w-12 sm:w-24 bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-[#D4AF37]" />
       <div className="flex items-center gap-2 text-[#D4AF37]">
         <span className="text-xs">◆</span>
@@ -66,7 +77,7 @@ export const OrnamentalDivider: React.FC<{ title?: string; className?: string }>
         <span className="text-xs">◆</span>
       </div>
       <div className="h-[1px] w-12 sm:w-24 bg-gradient-to-l from-transparent via-[#D4AF37]/60 to-[#D4AF37]" />
-    </div>
+    </motion.div>
   );
 };
 
