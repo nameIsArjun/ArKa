@@ -183,22 +183,20 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
           <div className="flex items-center gap-3">
             <button
               onClick={() => setAdminTab('approved')}
-              className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                adminTab === 'approved'
+              className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${adminTab === 'approved'
                   ? 'bg-[#0A4A40] text-[#FFFDF9] shadow-md'
                   : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
-              }`}
+                }`}
             >
               <span>Published Wall ({approvedBlessings.length})</span>
             </button>
 
             <button
               onClick={() => setAdminTab('pending')}
-              className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                adminTab === 'pending'
+              className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${adminTab === 'pending'
                   ? 'bg-[#B38728] text-white shadow-md'
                   : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
-              }`}
+                }`}
             >
               <span>Pending Review Queue ({pendingBlessings.length})</span>
               {pendingBlessings.length > 0 && (
@@ -379,7 +377,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                       disabled={formSubmitting}
                       className="w-full py-3 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
                     >
-                      {formSubmitting ? 'Submitting...' : 'Submit Blessing for Review'}
+                      {formSubmitting ? 'Submitting...' : 'Wish them well'}
                     </button>
                   </form>
                 </>
