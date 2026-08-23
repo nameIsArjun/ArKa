@@ -37,13 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   );
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const startTime = performance.now();
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { action, filename, mimeType, base64, uploadUrl, chunkBase64, contentRange } = body || {};
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+    const urlObj = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+    const queryAction = urlObj.searchParams.get('action') || (req.query?.action as string);
+
+    const action = body.action || queryAction;
+    const { filename, mimeType, base64, uploadUrl, chunkBase64, contentRange } = body;
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -63,7 +66,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
     oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-    // Action 1: Start Resumable Upload Session
+    // Action 1: List Photos from Google Drive Folder
+    if (req.method === 'GET' || action === 'list') {
+      const drive = google.drive({ version: 'v3', auth: oauth2Client });
+      const driveListRes = await drive.files.list({
+        q: `'${folderId}' in parents and trashed = false and mimeType starts with 'image/'`,
+        fields: 'files(id, name, mimeType, webViewLink, webContentLink, thumbnailLink, createdTime)',
+        orderBy: 'createdTime desc',
+        pageSize: 100,
+      });
+
+      const files = (driveListRes.data.files || []).map((file) => {
+        const cdnThumb = `https://lh3.googleusercontent.com/d/${file.id}=s600`;
+        const cdnFull = `https://lh3.googleusercontent.com/d/${file.id}=s1600`;
+        return {
+          id: file.id || `file-${Math.random()}`,
+          name: file.name || 'Photo',
+          mimeType: file.mimeType || 'image/jpeg',
+          thumbnailUrl: cdnThumb,
+          fullUrl: cdnFull,
+          createdTime: file.createdTime,
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        count: files.length,
+        files,
+        source: 'google-drive-cdn-list',
+      });
+    }
+
+    // Action 2: Start Resumable Upload Session
     if (action === 'start') {
       if (!filename) return res.status(400).json({ error: 'Missing filename parameter.' });
 
@@ -107,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Action 2: Send Chunks via Server Proxy (Bypasses Vercel 4.5MB limit & 0 CORS errors!)
+    // Action 3: Send Chunks via Server Proxy
     if (action === 'chunk') {
       if (!uploadUrl || !chunkBase64 || !contentRange) {
         return res.status(400).json({ error: 'Missing uploadUrl, chunkBase64, or contentRange.' });
@@ -123,8 +157,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         body: chunkBuffer,
       });
 
-      // 308 Resume Incomplete = Chunk received successfully, keep sending next chunk
-      // 200 / 201 = Upload completed successfully!
       if (googleRes.status === 308 || googleRes.ok) {
         return res.status(200).json({
           success: true,
@@ -159,6 +191,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fields: 'id, name, webViewLink',
     });
 
+    const createdFileId = driveRes.data.id;
+
+    // Grant public link reader permission so image displays instantly on CDN
+    if (createdFileId) {
+      try {
+        await drive.permissions.create({
+          fileId: createdFileId,
+          requestBody: { role: 'reader', type: 'anyone' },
+        });
+      } catch (e) {}
+    }
+
     const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(2);
 
     return res.status(200).json({
@@ -166,6 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fileId: driveRes.data.id,
       fileName: driveRes.data.name,
       fileUrl: driveRes.data.webViewLink,
+      cdnUrl: `https://lh3.googleusercontent.com/d/${driveRes.data.id}=s600`,
       elapsedSec,
       source: 'google-cloud-direct-api-v3',
     });

@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { google } from 'googleapis';
-import { Readable } from 'stream';
 import fs from 'fs';
+import uploadHandler from './api/upload';
+import blessingsHandler from './api/blessings';
 
 // Helper to load .env.local in Vite config
 const loadEnvLocal = () => {
@@ -34,151 +34,70 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'local-api-upload-middleware',
+      name: 'local-api-middleware',
       configureServer(server) {
-        server.middlewares.use('/api/upload', (req, res) => {
-          if (req.method !== 'POST') {
-            res.statusCode = 405;
-            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
-            return;
-          }
-          let bodyStr = '';
-          req.on('data', (chunk) => {
-            bodyStr += chunk;
-          });
-          req.on('end', async () => {
-            const startTime = performance.now();
-            try {
-              const body = JSON.parse(bodyStr);
-              const { action, filename, mimeType, base64, uploadUrl, chunkBase64, contentRange } = body || {};
+        // Local development middleware for /api/upload
+        server.middlewares.use('/api/upload', async (req, res) => {
+          try {
+            const urlObj = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+            const queryAction = urlObj.searchParams.get('action');
+            const queryFileId = urlObj.searchParams.get('fileId');
 
-              const clientId = process.env.GOOGLE_CLIENT_ID;
-              const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-              const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-              const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '1SmRzW3JpwfkYwQ_hEF9Cr5k7_KVKWUZR';
+            const handleRequest = async (bodyObj: any) => {
+              const fakeVercelReq: any = {
+                method: req.method,
+                headers: req.headers,
+                url: req.url,
+                body: bodyObj,
+                query: Object.fromEntries(urlObj.searchParams),
+              };
 
-              if (!clientId || !clientSecret || !refreshToken) {
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: 'Google OAuth2 credentials missing in .env.local' }));
-                return;
-              }
-
-              const oauth2Client = new google.auth.OAuth2(
-                clientId,
-                clientSecret,
-                'https://developers.google.com/oauthplayground'
-              );
-              oauth2Client.setCredentials({ refresh_token: refreshToken });
-
-              if (action === 'start') {
-                const tokenRes = await oauth2Client.getAccessToken();
-                const accessToken = tokenRes.token;
-
-                if (!accessToken) {
-                  res.statusCode = 500;
-                  res.end(JSON.stringify({ error: 'Failed to obtain access token for resumable video upload.' }));
-                  return;
-                }
-
-                const googleRes = await fetch(
-                  'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
-                  {
-                    method: 'POST',
-                    headers: {
-                      Authorization: `Bearer ${accessToken}`,
-                      'Content-Type': 'application/json; charset=UTF-8',
-                      'X-Upload-Content-Type': mimeType || 'application/octet-stream',
-                    },
-                    body: JSON.stringify({
-                      name: filename,
-                      parents: [folderId],
-                    }),
-                  }
-                );
-
-                if (!googleRes.ok) {
-                  const errText = await googleRes.text();
-                  res.statusCode = googleRes.status;
-                  res.end(JSON.stringify({ error: `Google API Resumable Error: ${errText}` }));
-                  return;
-                }
-
-                const sessionUrl = googleRes.headers.get('location');
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: true, uploadUrl: sessionUrl, source: 'vite-local-resumable-start' }));
-                return;
-              }
-
-              if (action === 'chunk') {
-                const chunkBuffer = Buffer.from(chunkBase64, 'base64');
-                const googleRes = await fetch(uploadUrl, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Range': contentRange,
-                    'Content-Type': mimeType || 'application/octet-stream',
-                  },
-                  body: chunkBuffer,
-                });
-
-                if (googleRes.status === 308 || googleRes.ok) {
+              const fakeVercelRes: any = {
+                statusCode: 200,
+                setHeader: (k: string, v: string) => res.setHeader(k, v),
+                status: function(code: number) {
+                  res.statusCode = code;
+                  this.statusCode = code;
+                  return this;
+                },
+                json: (data: any) => {
                   res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ success: true, status: googleRes.status, completed: googleRes.ok, source: 'vite-local-resumable-chunk' }));
-                  return;
+                  res.end(JSON.stringify(data));
+                },
+                send: (data: any) => {
+                  res.end(data);
+                },
+                end: (data?: any) => {
+                  res.end(data);
+                },
+              };
+
+              await uploadHandler(fakeVercelReq, fakeVercelRes);
+            };
+
+            if (req.method === 'GET' || queryAction === 'media' || queryAction === 'list') {
+              await handleRequest({ action: queryAction, fileId: queryFileId });
+            } else {
+              let bodyStr = '';
+              req.on('data', (chunk) => { bodyStr += chunk; });
+              req.on('end', async () => {
+                let body: any = {};
+                if (bodyStr) {
+                  try { body = JSON.parse(bodyStr); } catch (e) {}
                 }
-
-                const errText = await googleRes.text();
-                res.statusCode = googleRes.status;
-                res.end(JSON.stringify({ error: `Google Chunk Upload Error: ${errText}` }));
-                return;
-              }
-
-              if (!base64) {
-                res.statusCode = 400;
-                res.end(JSON.stringify({ error: 'Missing base64 parameter.' }));
-                return;
-              }
-
-              const drive = google.drive({ version: 'v3', auth: oauth2Client });
-              const buffer = Buffer.from(base64, 'base64');
-              const mediaStream = Readable.from(buffer);
-
-              const driveRes = await drive.files.create({
-                requestBody: {
-                  name: filename,
-                  parents: [folderId],
-                },
-                media: {
-                  mimeType: mimeType || 'image/jpeg',
-                  body: mediaStream,
-                },
-                fields: 'id, name, webViewLink',
+                await handleRequest(body);
               });
-
-              const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(2);
-
-              res.setHeader('Content-Type', 'application/json');
-              res.end(
-                JSON.stringify({
-                  success: true,
-                  fileId: driveRes.data.id,
-                  fileName: driveRes.data.name,
-                  fileUrl: driveRes.data.webViewLink,
-                  elapsedSec,
-                  source: 'vite-local-direct-oauth-v3',
-                })
-              );
-            } catch (err: any) {
-              console.error('Error in local dev upload middleware:', err);
-              res.statusCode = 500;
-              res.end(JSON.stringify({ error: err.message || 'Server Error' }));
             }
-          });
+          } catch (err: any) {
+            console.error('Error in local /api/upload middleware:', err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message || 'Server Error' }));
+          }
         });
 
         // Local development middleware for /api/blessings
         server.middlewares.use('/api/blessings', async (req, res) => {
           try {
-            const blessingsHandler = (await import('./api/blessings')).default;
             let bodyStr = '';
             req.on('data', (chunk) => { bodyStr += chunk; });
             req.on('end', async () => {

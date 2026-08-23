@@ -172,7 +172,7 @@ function getAdminStateFromUrlOrStorage(): boolean {
   if (adminParam === secretKey || adminParam === 'arka2026' || adminParam === 'puridhir') {
     try {
       localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
-    } catch (e) {}
+    } catch (e) { }
     return true;
   }
 
@@ -181,7 +181,7 @@ function getAdminStateFromUrlOrStorage(): boolean {
     if (localStorage.getItem(ADMIN_STORAGE_KEY) === 'true') {
       return true;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return false;
 }
@@ -199,7 +199,7 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
 
   const params = new URLSearchParams(window.location.search);
   const sideParam = (params.get('side') || params.get('role') || '').toLowerCase();
-  
+
   const isAdmin = getAdminStateFromUrlOrStorage();
 
   const path = window.location.pathname.toLowerCase();
@@ -327,7 +327,7 @@ export function App() {
       setAdminPinError(false);
       try {
         localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
-      } catch (err) {}
+      } catch (err) { }
     } else {
       setAdminPinError(true);
     }
@@ -337,9 +337,9 @@ export function App() {
     setIsAdmin(false);
     try {
       localStorage.removeItem(ADMIN_STORAGE_KEY);
-    } catch (err) {}
+    } catch (err) { }
   };
-  
+
   // Auto-prompt for Admin PIN passcode immediately when visiting /admin URL
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -452,35 +452,35 @@ export function App() {
                 <SaveTheDateView />
               </div>
             ) : (
-          <>
-            {/* Hero Header Section */}
-            <HeroHeader />
+              <>
+                {/* Hero Header Section */}
+                <HeroHeader />
 
-            <main className="relative z-20 space-y-12 pt-8">
-              {/* Interactive Event Itinerary */}
-              <EventTimeline
-                activeTab={activeTab}
-                onTabChange={handleTabChange}
-                hasSelectedTeam={hasSelectedTeam}
-                isAdmin={isAdmin}
-              />
+                <main className="relative z-20 space-y-12 pt-8">
+                  {/* Interactive Event Itinerary */}
+                  <EventTimeline
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    hasSelectedTeam={hasSelectedTeam}
+                    isAdmin={isAdmin}
+                  />
 
-              {/* Family & Entourage Grid (Pillars of Love) - Controlled via env / URL parameter */}
-              {showPillarsOfLove && <FamilyGrid activeTab={activeTab} />}
+                  {/* Family & Entourage Grid (Pillars of Love) - Controlled via env / URL parameter */}
+                  {showPillarsOfLove && <FamilyGrid activeTab={activeTab} />}
 
-              {/* Bento Box Photo Gallery & Lightbox (Visual Memories) - Controlled via env / URL parameter */}
-              {showVisualMemories && <GalleryGrid activeTab={activeTab} />}
+                  {/* Bento Box Photo Gallery & Lightbox (Visual Memories) - Controlled via env / URL parameter */}
+                  {showVisualMemories && <GalleryGrid activeTab={activeTab} />}
 
-              {/* Virtual Guestbook & Blessings Wall */}
-              <GuestbookSection isAdmin={isAdmin} />
-            </main>
+                  {/* Virtual Guestbook & Blessings Wall */}
+                  <GuestbookSection isAdmin={isAdmin} />
+                </main>
+              </>
+            )}
+
+            {/* Royal Footer */}
+            <Footer />
           </>
         )}
-
-        {/* Royal Footer */}
-        <Footer />
-      </>
-    )}
 
         {/* Active Admin Status Badge (Bottom Right) */}
         {isAdmin && (
