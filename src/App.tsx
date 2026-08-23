@@ -202,8 +202,9 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
   
   const isAdmin = getAdminStateFromUrlOrStorage();
 
-  const isBrideParam = sideParam === 'bride' || params.has('bride') || window.location.hostname.includes('bride');
-  const isGroomParam = sideParam === 'groom' || params.has('groom') || window.location.hostname.includes('groom');
+  const path = window.location.pathname.toLowerCase();
+  const isBrideParam = sideParam === 'bride' || params.has('bride') || path.includes('/kanishka') || path.includes('/bride') || window.location.hostname.includes('bride');
+  const isGroomParam = sideParam === 'groom' || params.has('groom') || path.includes('/arjun') || path.includes('/groom') || window.location.hostname.includes('groom');
 
   const envTrack = (import.meta.env.VITE_WEDDING_TRACK || '').toLowerCase();
 
