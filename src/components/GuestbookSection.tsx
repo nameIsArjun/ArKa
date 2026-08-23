@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { INITIAL_GUESTBOOK } from '../data/weddingData';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OrnamentalDivider } from './MandalaPattern';
 import { Sparkles, Quote, PenTool, CheckCircle2, Trash2, X, ShieldCheck, RefreshCw } from 'lucide-react';
 import { triggerWeddingPetalBurst } from '../utils/confettiHelper';
+
+// Swiper for smooth horizontal auto-glide + touch carousel
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Keyboard } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+import 'swiper/css';
 
 export interface BlessingItem {
   id: string;
@@ -19,8 +24,9 @@ interface GuestbookSectionProps {
 }
 
 export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = false }) => {
+  const swiperRef = useRef<SwiperType | null>(null);
   const [blessings, setBlessings] = useState<BlessingItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [adminTab, setAdminTab] = useState<'approved' | 'pending'>('approved');
 
@@ -31,7 +37,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
 
-  // Fetch blessings from /api/blessings
+  // Fetch blessings live from Google Sheets API
   const fetchBlessings = async () => {
     try {
       const res = await fetch('/api/blessings');
@@ -43,18 +49,10 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
         }
       }
     } catch (e) {
-      console.error('Error fetching blessings API:', e);
+      console.error('Error fetching blessings from Google Sheets API:', e);
     } finally {
       setIsLoading(false);
     }
-
-    // Fallback to initial guestbook items
-    setBlessings(
-      INITIAL_GUESTBOOK.map((item) => ({
-        ...item,
-        status: 'approved' as const,
-      }))
-    );
   };
 
   useEffect(() => {
@@ -224,80 +222,109 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
         </div>
       )}
 
-      {/* Full Width Blessings Cards Grid in exact Spreadsheet Order */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayList.map((msg, idx) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: idx * 0.05 }}
-            className="bg-[#FFFDF9] border-2 border-[#D4AF37]/40 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all text-left flex flex-col justify-between relative group"
-          >
-            <div>
-              {/* Pending Badge in Admin Mode */}
-              {msg.status === 'pending' && (
-                <div className="mb-3 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold w-fit flex items-center gap-1">
-                  <span>⏳ Awaiting Approval</span>
-                </div>
-              )}
-
-              {/* Header Info: Name + Relation to Bride/Groom */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#0A4A40] text-[#FFFDF9] font-serif font-extrabold text-sm flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
-                  {msg.name.slice(0, 1).toUpperCase()}
-                </div>
+      {/* BLESSINGS AUTO-GLIDING MOTION CAROUSEL */}
+      <div className="relative w-full">
+        <Swiper
+          modules={[Autoplay, Keyboard]}
+          onSwiper={(swiper) => (swiperRef.current = swiper)}
+          loop={true}
+          grabCursor={true}
+          keyboard={{ enabled: true }}
+          autoplay={{
+            delay: 3500,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }}
+          speed={800}
+          spaceBetween={16}
+          slidesPerView={1.15}
+          breakpoints={{
+            640: {
+              slidesPerView: 2.15,
+              spaceBetween: 20,
+            },
+            1024: {
+              slidesPerView: 3,
+              spaceBetween: 24,
+            },
+          }}
+          className="w-full !pb-4"
+        >
+          {displayList.map((msg) => (
+            <SwiperSlide key={msg.id} className="!h-auto pb-2">
+              <div className="h-full bg-[#FFFDF9] border-2 border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 shadow-[0_10px_25px_-8px_rgba(212,175,55,0.15)] hover:shadow-2xl hover:border-[#D4AF37] transition-all text-left flex flex-col justify-between group select-none">
                 <div>
-                  <h4 className="font-serif font-extrabold text-base text-[#0A4A40]">
-                    {msg.name}
-                  </h4>
-                  <span className="text-[10px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block">
-                    {msg.relation}
-                  </span>
-                </div>
-              </div>
-
-              {/* Message */}
-              <div className="relative bg-[#FAF6F0] p-4 rounded-2xl border border-[#D4AF37]/30 shadow-inner">
-                <Quote size={16} className="text-[#B38728] absolute top-2 right-2 opacity-30" />
-                <p className="text-xs text-[#2D3748] italic font-serif leading-relaxed pr-4">
-                  "{msg.message}"
-                </p>
-              </div>
-            </div>
-
-            {/* Date Tag & Admin Action Bar */}
-            <div className="mt-4 pt-3 border-t border-[#D4AF37]/20 flex items-center justify-between">
-              <span className="text-[10px] text-[#8C641D] font-serif font-bold uppercase tracking-wider">
-                {msg.date}
-              </span>
-
-              {/* Website Admin Quick Action Controls */}
-              {isAdmin && (
-                <div className="flex items-center gap-1.5">
+                  {/* Pending Badge in Admin Mode */}
                   {msg.status === 'pending' && (
-                    <button
-                      onClick={() => handleApprove(msg.id)}
-                      className="px-3 py-1 rounded-full bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all flex items-center gap-1 shadow-xs cursor-pointer"
-                      title="Approve & Publish to Live Wall"
-                    >
-                      <CheckCircle2 size={12} />
-                      <span>Approve</span>
-                    </button>
+                    <div className="mb-3 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold w-fit flex items-center gap-1">
+                      <span>⏳ Awaiting Approval</span>
+                    </div>
                   )}
 
-                  <button
-                    onClick={() => handleDeny(msg.id)}
-                    className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
-                    title="Delete / Deny"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  {/* Header Info: Name + Relation to Bride/Groom */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[#0A4A40] text-[#FFFDF9] font-serif font-extrabold text-sm flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
+                      {msg.name.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#0A4A40] truncate">
+                        {msg.name}
+                      </h4>
+                      <span className="text-[10px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block truncate">
+                        {msg.relation}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div className="relative bg-[#FAF6F0] p-4 rounded-2xl border border-[#D4AF37]/30 shadow-inner min-h-[110px] flex items-center">
+                    <Quote size={16} className="text-[#B38728] absolute top-2 right-2 opacity-30" />
+                    <p className="text-xs sm:text-[13px] text-[#2D3748] italic font-serif leading-relaxed pr-4">
+                      &ldquo;{msg.message.replace(/^["“”']+|["“”']+$/g, '').trim()}&rdquo;
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </motion.div>
-        ))}
+
+                {/* Date Tag & Admin Action Bar */}
+                <div className="mt-4 pt-3 border-t border-[#D4AF37]/20 flex items-center justify-between">
+                  <span className="text-[10px] text-[#8C641D] font-serif font-bold uppercase tracking-wider">
+                    {msg.date}
+                  </span>
+
+                  {/* Website Admin Quick Action Controls */}
+                  {isAdmin && (
+                    <div className="flex items-center gap-1.5">
+                      {msg.status === 'pending' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(msg.id);
+                          }}
+                          className="px-3 py-1 rounded-full bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+                          title="Approve & Publish to Live Wall"
+                        >
+                          <CheckCircle2 size={12} />
+                          <span>Approve</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeny(msg.id);
+                        }}
+                        className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                        title="Delete / Deny"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
 
       {/* GUEST BLESSING SUBMISSION MODAL */}

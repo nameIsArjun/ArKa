@@ -27,8 +27,26 @@
   border-radius: 6px;
   border: 2px solid #F4EDE2;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #B38728;
+/* Continuous Smooth Marquee for Blessings Ribbon */
+@keyframes marquee-glide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-smooth {
+  display: flex;
+  width: max-content;
+  animation: marquee-glide 50s linear infinite;
+  will-change: transform;
+}
+
+.marquee-pause:hover,
+.marquee-pause:active {
+  animation-play-state: paused;
 }
 
 
