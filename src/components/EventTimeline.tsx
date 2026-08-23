@@ -451,13 +451,16 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
 
                         {/* Action Buttons */}
                         <div className="pt-3 border-t border-[#D4AF37]/20 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                          <button
-                            onClick={() => setSelectedMapEvent(evt)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-[#0A4A40] hover:text-[#008070] transition-colors cursor-pointer"
+                          <a
+                            href={evt.googleMapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0A4A40] text-[#FFFDF9] hover:bg-[#008070] text-xs font-bold transition-all shadow-sm cursor-pointer border border-[#D4AF37]"
                           >
-                            <MapPin size={14} className="text-[#B38728]" />
-                            <span>View Directions</span>
-                          </button>
+                            <MapPin size={13} className="text-[#D4AF37]" />
+                            <span>Open in Google Maps</span>
+                            <ExternalLink size={12} className="text-[#D4AF37]" />
+                          </a>
 
                           <button
                             onClick={() => downloadIcs(evt)}

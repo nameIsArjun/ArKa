@@ -174,6 +174,45 @@ export default defineConfig({
             }
           });
         });
+
+        // Local development middleware for /api/blessings
+        server.middlewares.use('/api/blessings', async (req, res) => {
+          try {
+            const blessingsHandler = (await import('./api/blessings')).default;
+            let bodyStr = '';
+            req.on('data', (chunk) => { bodyStr += chunk; });
+            req.on('end', async () => {
+              try {
+                const body = bodyStr ? JSON.parse(bodyStr) : {};
+                const fakeVercelReq: any = {
+                  method: req.method,
+                  headers: req.headers,
+                  body,
+                  query: {},
+                };
+                const fakeVercelRes: any = {
+                  setHeader: (k: string, v: string) => res.setHeader(k, v),
+                  status: (code: number) => {
+                    res.statusCode = code;
+                    return fakeVercelRes;
+                  },
+                  json: (data: any) => {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                  },
+                  end: () => res.end(),
+                };
+                await blessingsHandler(fakeVercelReq, fakeVercelRes);
+              } catch (err: any) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: err.message || 'Server Error' }));
+              }
+            });
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message || 'Server Error' }));
+          }
+        });
       },
     },
   ],

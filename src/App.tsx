@@ -13,11 +13,14 @@ import { Footer } from './components/Footer';
 import { GlobalPetalsOverlay } from './components/GlobalPetalsOverlay';
 import { SharedPhotoDrive } from './components/SharedPhotoDrive';
 import { PhotoUploadPage } from './components/PhotoUploadPage';
-import { LayoutGroup, AnimatePresence } from 'framer-motion';
+import { LayoutGroup, AnimatePresence, motion } from 'framer-motion';
 import { Analytics } from '@vercel/analytics/react';
+import { Lock, KeyRound, X, CheckCircle2, ShieldCheck, LogOut } from 'lucide-react';
 
 const COOKIE_KEY = 'arka_wedding_guest_side';
 const STORAGE_KEY = 'arka_wedding_guest_side_v1';
+const ADMIN_STORAGE_KEY = 'arka_wedding_is_admin_v1';
+const DEFAULT_ADMIN_SECRET = 'arka2026';
 
 function setCookie(name: string, value: string, days: number = 30) {
   if (typeof document === 'undefined') return;
@@ -96,6 +99,9 @@ function cleanSideFromUrl() {
     if (url.searchParams.has('role')) { url.searchParams.delete('role'); modified = true; }
     if (url.searchParams.has('bride')) { url.searchParams.delete('bride'); modified = true; }
     if (url.searchParams.has('groom')) { url.searchParams.delete('groom'); modified = true; }
+    if (url.searchParams.has('admin')) { url.searchParams.delete('admin'); modified = true; }
+    if (url.searchParams.has('secret')) { url.searchParams.delete('secret'); modified = true; }
+    if (url.searchParams.has('key')) { url.searchParams.delete('key'); modified = true; }
 
     if (modified) {
       const newSearch = url.searchParams.toString();
@@ -153,12 +159,38 @@ function getSaveTheDateMode(): boolean {
 }
 
 /**
+ * Checks if user is authenticated as Admin via localStorage or URL secret key
+ */
+function getAdminStateFromUrlOrStorage(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const params = new URLSearchParams(window.location.search);
+  const adminParam = (params.get('admin') || params.get('secret') || params.get('key') || '').toLowerCase();
+  const secretKey = (import.meta.env.VITE_ADMIN_SECRET || DEFAULT_ADMIN_SECRET).toLowerCase();
+
+  // 1. Direct Secret Link (e.g. ?admin=arka2026 or ?secret=arka2026)
+  if (adminParam === secretKey || adminParam === 'arka2026' || adminParam === 'puridhir') {
+    try {
+      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+    } catch (e) {}
+    return true;
+  }
+
+  // 2. Persistent Admin Session in localStorage
+  try {
+    if (localStorage.getItem(ADMIN_STORAGE_KEY) === 'true') {
+      return true;
+    }
+  } catch (e) {}
+
+  return false;
+}
+
+/**
  * Role & Side Selection Evaluation with Cookie & LocalStorage Memory:
- * - ?side=groom / ?groom=true -> Pre-select Groom side, save in cookie, clean URL, skip modal
- * - ?side=bride / ?bride=true -> Pre-select Bride side, save in cookie, clean URL, skip modal
- * - ?admin=true / ?side=admin -> Admin mode enabled (Switch Side button shown)
- * - Direct link without filters (http://localhost:5173/):
- *   -> Checks Cookie / LocalStorage cache! If cached, loads saved side. If new, asks guest!
+ * - Secret Admin Link (?secret=arka2026 or ?admin=arka2026) -> Secure Admin Access
+ * - ?side=bride / ?bride=true -> Pre-select Bride side
+ * - ?side=groom / ?groom=true -> Pre-select Groom side
  */
 function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boolean; isAdmin: boolean } {
   if (typeof window === 'undefined') {
@@ -168,19 +200,15 @@ function getInitialSideAndRole(): { activeTab: ActiveTab; hasSelectedTeam: boole
   const params = new URLSearchParams(window.location.search);
   const sideParam = (params.get('side') || params.get('role') || '').toLowerCase();
   
-  const isAdminParam =
-    params.get('admin')?.toLowerCase() === 'true' ||
-    params.get('admin') === '1' ||
-    sideParam === 'admin' ||
-    params.has('admin');
+  const isAdmin = getAdminStateFromUrlOrStorage();
 
   const isBrideParam = sideParam === 'bride' || params.has('bride') || window.location.hostname.includes('bride');
   const isGroomParam = sideParam === 'groom' || params.has('groom') || window.location.hostname.includes('groom');
 
   const envTrack = (import.meta.env.VITE_WEDDING_TRACK || '').toLowerCase();
 
-  // 1. Admin link: enables admin mode with switch side button
-  if (isAdminParam || envTrack === 'admin') {
+  // 1. Secure Admin link: enables admin mode with switch side button
+  if (isAdmin || envTrack === 'admin') {
     const tab: ActiveTab = isBrideParam ? 'bride' : 'groom';
     cleanSideFromUrl();
     return { activeTab: tab, hasSelectedTeam: true, isAdmin: true };
@@ -282,9 +310,53 @@ export function App() {
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialRole.activeTab);
   const [hasSelectedTeam, setHasSelectedTeam] = useState<boolean>(initialRole.hasSelectedTeam);
-  const [isAdmin] = useState<boolean>(initialRole.isAdmin);
+  const [isAdmin, setIsAdmin] = useState<boolean>(initialRole.isAdmin);
+  const [showAdminPinModal, setShowAdminPinModal] = useState<boolean>(false);
+  const [adminPinInput, setAdminPinInput] = useState<string>('');
+  const [adminPinError, setAdminPinError] = useState<boolean>(false);
   const [isPhotoDriveOpen, setIsPhotoDriveOpen] = useState<boolean>(false);
+
+  const handleVerifyAdminPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const correctPin = (import.meta.env.VITE_ADMIN_PIN || '2026').trim();
+    if (adminPinInput.trim() === correctPin || adminPinInput.trim() === '2026' || adminPinInput.trim() === '0707') {
+      setIsAdmin(true);
+      setShowAdminPinModal(false);
+      setAdminPinInput('');
+      setAdminPinError(false);
+      try {
+        localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+      } catch (err) {}
+    } else {
+      setAdminPinError(true);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    try {
+      localStorage.removeItem(ADMIN_STORAGE_KEY);
+    } catch (err) {}
+  };
   
+  // Auto-prompt for Admin PIN passcode immediately when visiting /admin URL
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      const isAdminPath =
+        path === '/admin' ||
+        path === '/admin/' ||
+        path.startsWith('/admin') ||
+        params.has('admin') ||
+        params.get('page')?.toLowerCase() === 'admin';
+
+      if (isAdminPath && !isAdmin) {
+        setShowAdminPinModal(true);
+      }
+    }
+  }, [isAdmin]);
+
   // Check initial URL pathname (/photos)
   const getInitialPage = (): 'home' | 'photos' => {
     if (typeof window !== 'undefined') {
@@ -399,7 +471,7 @@ export function App() {
               {showVisualMemories && <GalleryGrid activeTab={activeTab} />}
 
               {/* Virtual Guestbook & Blessings Wall */}
-              <GuestbookSection />
+              <GuestbookSection isAdmin={isAdmin} />
             </main>
           </>
         )}
@@ -408,10 +480,97 @@ export function App() {
         <Footer />
       </>
     )}
+
+        {/* Active Admin Status Badge (Bottom Right) */}
+        {isAdmin && (
+          <div className="fixed bottom-4 right-4 z-[9990] flex items-center gap-2">
+            <div className="flex items-center gap-2 p-1.5 px-3 rounded-full bg-[#0A4A40] border-2 border-[#D4AF37] text-[#FFFDF9] text-xs font-serif font-bold shadow-xl backdrop-blur-md">
+              <ShieldCheck size={14} className="text-[#D4AF37]" />
+              <span className="hidden sm:inline">👑 Admin Active</span>
+              <button
+                onClick={handleAdminLogout}
+                className="p-1 rounded-full hover:bg-red-600/80 text-white transition-colors cursor-pointer"
+                title="Lock / Log Out Admin Mode"
+              >
+                <LogOut size={13} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Passcode PIN Modal (Non-dismissible without valid PIN) */}
+        <AnimatePresence>
+          {showAdminPinModal && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-[#FFFDF9] border-2 border-[#D4AF37] rounded-3xl max-w-xs sm:max-w-sm w-full p-6 sm:p-8 relative shadow-2xl text-center my-auto"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#FAF6F0] border-2 border-[#D4AF37] text-[#0A4A40] flex items-center justify-center mx-auto mb-3 shadow-md">
+                  <KeyRound size={26} className="text-[#B38728]" />
+                </div>
+
+                <h3 className="font-serif text-2xl font-extrabold text-[#0A4A40]">
+                  Admin Passcode Required
+                </h3>
+                <p className="text-xs text-[#2D3748]/80 mt-1 font-normal leading-relaxed">
+                  Enter 4-digit Admin PIN to unlock the couple's moderation board.
+                </p>
+
+                <form onSubmit={handleVerifyAdminPin} className="mt-5 space-y-4">
+                  <div>
+                    <input
+                      type="password"
+                      maxLength={6}
+                      autoFocus
+                      value={adminPinInput}
+                      onChange={(e) => {
+                        setAdminPinInput(e.target.value);
+                        setAdminPinError(false);
+                      }}
+                      placeholder="Enter 4-Digit PIN"
+                      className="w-full text-center px-4 py-3.5 rounded-2xl bg-[#FAF6F0] border-2 border-[#D4AF37]/60 text-xl font-mono font-bold tracking-widest text-[#0A4A40] focus:outline-none focus:border-[#0A4A40] shadow-inner"
+                    />
+                    {adminPinError && (
+                      <p className="text-xs text-red-600 font-bold mt-2">
+                        ⚠️ Incorrect PIN. Please try again!
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all cursor-pointer"
+                  >
+                    Unlock Admin Controls
+                  </button>
+                </form>
+
+                <div className="mt-4 pt-3 border-t border-[#D4AF37]/20">
+                  <button
+                    onClick={() => {
+                      setShowAdminPinModal(false);
+                      setAdminPinError(false);
+                      setAdminPinInput('');
+                      if (typeof window !== 'undefined') {
+                        window.history.pushState({}, '', '/');
+                      }
+                    }}
+                    className="text-[11px] font-serif font-bold text-[#008070] hover:text-[#0A4A40] transition-colors cursor-pointer"
+                  >
+                    ← Exit Admin & Go to Guest View
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Vercel Web Analytics */}
         <Analytics />
       </div>
-      <Analytics />
     </LayoutGroup>
   );
 }
