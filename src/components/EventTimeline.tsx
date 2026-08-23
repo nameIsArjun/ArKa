@@ -249,10 +249,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
           </div>
 
           {/* DESKTOP & MOBILE MAIN STAGE CONTAINER */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch min-h-[640px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
             {/* DESKTOP VERTICAL SIDEBAR MENU */}
-            <div className="hidden lg:flex lg:col-span-4 flex-col bg-[#FFFDF9] border-2 border-[#D4AF37]/60 rounded-3xl p-4 shadow-xl space-y-3 h-[640px]">
+            <div className="hidden lg:flex lg:col-span-4 flex-col bg-[#FFFDF9] border-2 border-[#D4AF37]/60 rounded-3xl p-4 shadow-xl space-y-3 sticky top-24 max-h-[calc(100vh-120px)]">
               <div className="px-3 py-2 border-b border-[#D4AF37]/30 text-left flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles size={15} className="text-[#B38728]" />
@@ -321,29 +321,30 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
               </div>
             </div>
 
-            {/* RIGHT FIXED STAGE AREA WITH SWIPER TOUCH PHYSICS */}
-            <div className="lg:col-span-8 relative h-[640px] rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
+            {/* RIGHT STAGE AREA WITH SWIPER DYNAMIC AUTO-HEIGHT */}
+            <div className="lg:col-span-8 relative w-full h-auto rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#FFFDF9]">
 
-              {/* SWIPER CONTAINER WITH MOBILE HORIZONTAL SWIPING */}
+              {/* SWIPER CONTAINER WITH MOBILE HORIZONTAL SWIPING & DYNAMIC HEIGHT */}
               <Swiper
                 direction="horizontal"
+                autoHeight={true}
                 touchReleaseOnEdges={true}
                 onSwiper={(swiper) => (swiperRef.current = swiper)}
                 onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
                 modules={[Keyboard]}
                 keyboard={{ enabled: true }}
                 grabCursor={true}
-                className="w-full h-full"
+                className="w-full h-auto"
               >
                 {filteredEvents.map((evt, idx) => (
-                  <SwiperSlide key={evt.id} className="w-full h-full bg-[#FFFDF9]">
-                    <div className="w-full h-full flex flex-col justify-between text-left relative overflow-hidden">
+                  <SwiperSlide key={evt.id} className="w-full h-auto bg-[#FFFDF9]">
+                    <div className="w-full h-auto flex flex-col text-left relative overflow-hidden">
 
                       {/* Dynamic Event Background Particle Backdrop */}
                       <EventBackgroundAnimation eventId={evt.id} category={evt.category} isInView={true} />
 
                       {/* Stage Hero Artwork Image Header */}
-                      <div className="relative h-60 sm:h-72 bg-[#FFFDF9] border-b-2 border-[#D4AF37]/40 flex items-center justify-center p-3 shrink-0">
+                      <div className="relative h-56 sm:h-72 bg-[#FFFDF9] border-b-2 border-[#D4AF37]/40 flex items-center justify-center p-3 shrink-0">
                         <img
                           src={getEventArtwork(evt.id)}
                           alt={evt.title}
@@ -400,7 +401,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ activeTab, onTabCh
                       </div>
 
                       {/* Stage Card Details Body */}
-                      <div className="p-6 space-y-4 relative z-10 flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between">
+                      <div className="p-5 sm:p-6 space-y-4 relative z-10 flex flex-col justify-between">
 
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold text-[#0A4A40]">
