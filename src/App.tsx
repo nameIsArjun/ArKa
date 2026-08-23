@@ -400,6 +400,32 @@ export function App() {
     }
   };
 
+  // Automated background visitor & IP telemetry logger to Google Sheets (Production & Preview only)
+  React.useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const hostname = window.location.hostname;
+      // Skip tracking on localhost / 127.0.0.1 to avoid cluttering real guest logs
+      if (hostname === 'localhost' || hostname === '127.0.0.1') return;
+
+      const now = Date.now();
+      const lastTrack = sessionStorage.getItem('arka_last_track');
+      // Log on initial entry and major navigation changes (debounced by 30s)
+      if (!lastTrack || now - Number(lastTrack) > 30000) {
+        sessionStorage.setItem('arka_last_track', String(now));
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: currentPage === 'photos' ? '/photos' : window.location.pathname,
+            side: activeTab,
+          }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }, [currentPage, activeTab]);
+
   const isSaveTheDateMode = getSaveTheDateMode();
   const showPillarsOfLove = getShowPillarsOfLove();
   const showVisualMemories = getShowVisualMemories();
