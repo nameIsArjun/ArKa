@@ -9,13 +9,13 @@
     "venueName": "Puri Residence, Panjtirthi",
     "address": "House No. 127, Panjtirthi, Jammu, J&K 180001",
     "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&destination=32.74001,74.87261&waypoints=Jk+Public+School+Panjtirthi+Jammu",
-    "dressCode": "Festive Ethnic / Traditional Kurta",
-    "dressCodeDescription": "Vibrant traditional kurtas, bandhgalas, and festive Indian wear.",
+    "dressCode": "Vibrant Festive Indian Traditional",
+    "dressCodeDescription": "Colorful & bright suits, floral dupattas, and festive traditional Indian ethnic attire",
     "dressCodeColors": [
-      "#0A4A40",
-      "#D4AF37",
-      "#B38728",
-      "#FFFDF9"
+      "#E91E63",
+      "#FFD700",
+      "#008070",
+      "#D4AF37"
     ],
     "image": "/images/event_sangeet.jpg",
     "category": "groom",
