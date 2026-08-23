@@ -69,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const device = parseDevice(userAgent);
 
     const now = new Date();
-    // Format timestamp in Indian Standard Time (IST)
+    // 1. IST Equivalent Time
     const istTime = now.toLocaleString('en-IN', {
       timeZone: 'Asia/Kolkata',
       day: '2-digit',
@@ -80,6 +80,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       second: '2-digit',
       hour12: true,
     });
+
+    // 2. Visitor's Local Time (as visited from their specific timezone)
+    const clientTimezone = body.timezone || (req.headers['x-vercel-ip-timezone'] as string) || '';
+    let visitorLocalTime = body.localTime || '';
+    if (!visitorLocalTime) {
+      if (clientTimezone) {
+        try {
+          visitorLocalTime = now.toLocaleString('en-US', {
+            timeZone: clientTimezone,
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          });
+        } catch (e) {
+          visitorLocalTime = istTime;
+        }
+      } else {
+        visitorLocalTime = istTime;
+      }
+    }
+    if (clientTimezone && !visitorLocalTime.includes('(')) {
+      visitorLocalTime = `${visitorLocalTime} (${clientTimezone})`;
+    }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -111,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 addSheet: {
                   properties: {
                     title: TAB_NAME,
-                    gridProperties: { rowCount: 1000, columnCount: 8 },
+                    gridProperties: { rowCount: 1000, columnCount: 9 },
                   },
                 },
               },
@@ -122,14 +149,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Add headers to new tab
         await sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `${TAB_NAME}!A1:H1`,
+          range: `${TAB_NAME}!A1:I1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [
-              ['Timestamp (IST)', 'IP Address', 'City', 'Region', 'Country', 'Route / Side', 'Device', 'User Agent'],
+              ['Visitor Local Time', 'IST Equivalent', 'IP Address', 'City', 'Region', 'Country', 'Route / Side', 'Device', 'User Agent'],
             ],
           },
         });
+      } else {
+        // Ensure header row is up to date with both timezone columns
+        const headerCheck = await sheets.spreadsheets.values.get({
+          spreadsheetId: SHEET_ID,
+          range: `${TAB_NAME}!A1:B1`,
+        });
+        const firstHeader = headerCheck.data.values?.[0]?.[0];
+        if (firstHeader === 'Timestamp (IST)') {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${TAB_NAME}!A1:I1`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+              values: [
+                ['Visitor Local Time', 'IST Equivalent', 'IP Address', 'City', 'Region', 'Country', 'Route / Side', 'Device', 'User Agent'],
+              ],
+            },
+          });
+        }
       }
     } catch (e: any) {
       console.warn('Could not verify sheet tab, continuing append:', e.message);
@@ -137,11 +183,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Step 2: Append visitor row to Google Sheet
     const routeInfo = side ? `${pathVisited} (${side.toUpperCase()})` : pathVisited;
-    const rowData = [istTime, ip, city, region, country, routeInfo, device, userAgent];
+    const rowData = [visitorLocalTime, istTime, ip, city, region, country, routeInfo, device, userAgent];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${TAB_NAME}!A:H`,
+      range: `${TAB_NAME}!A:I`,
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -151,7 +197,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       success: true,
-      logged: { ip, city, country, routeInfo, istTime },
+      logged: { ip, city, country, routeInfo, visitorLocalTime, istTime },
     });
   } catch (err: any) {
     console.error('Error logging visitor to Google Sheet:', err);

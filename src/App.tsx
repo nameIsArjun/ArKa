@@ -317,10 +317,9 @@ export function App() {
   const [adminPinError, setAdminPinError] = useState<boolean>(false);
   const [isPhotoDriveOpen, setIsPhotoDriveOpen] = useState<boolean>(false);
 
-  const handleVerifyAdminPin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const verifyAdminPin = (pin: string) => {
     const correctPin = (import.meta.env.VITE_ADMIN_PIN || '2026').trim();
-    if (adminPinInput.trim() === correctPin || adminPinInput.trim() === '2026' || adminPinInput.trim() === '0707') {
+    if (pin.trim() === correctPin || pin.trim() === '2026' || pin.trim() === '0707') {
       setIsAdmin(true);
       setShowAdminPinModal(false);
       setAdminPinInput('');
@@ -330,6 +329,22 @@ export function App() {
       } catch (err) { }
     } else {
       setAdminPinError(true);
+    }
+  };
+
+  const handleVerifyAdminPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPinInput) {
+      verifyAdminPin(adminPinInput);
+    }
+  };
+
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+    setAdminPinInput(val);
+    setAdminPinError(false);
+    if (val.length === 4) {
+      verifyAdminPin(val);
     }
   };
 
@@ -413,12 +428,25 @@ export function App() {
       // Log on initial entry and major navigation changes (debounced by 30s)
       if (!lastTrack || now - Number(lastTrack) > 30000) {
         sessionStorage.setItem('arka_last_track', String(now));
+        const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        const userLocalTime = new Date().toLocaleString('en-US', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        });
+
         fetch('/api/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             path: currentPage === 'photos' ? '/photos' : window.location.pathname,
             side: activeTab,
+            timezone: userTz,
+            localTime: userLocalTime,
           }),
           keepalive: true,
         }).catch(() => {});
@@ -547,19 +575,31 @@ export function App() {
                 </p>
 
                 <form onSubmit={handleVerifyAdminPin} className="mt-5 space-y-4">
-                  <div>
+                  <div className="space-y-3">
                     <input
                       type="password"
-                      maxLength={6}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
                       autoFocus
+                      autoComplete="one-time-code"
                       value={adminPinInput}
-                      onChange={(e) => {
-                        setAdminPinInput(e.target.value);
-                        setAdminPinError(false);
-                      }}
-                      placeholder="Enter 4-Digit PIN"
-                      className="w-full text-center px-4 py-3.5 rounded-2xl bg-[#FAF6F0] border-2 border-[#D4AF37]/60 text-xl font-mono font-bold tracking-widest text-[#0A4A40] focus:outline-none focus:border-[#0A4A40] shadow-inner"
+                      onChange={handlePinChange}
+                      placeholder="••••"
+                      className="w-full text-center px-4 py-3.5 rounded-2xl bg-[#FAF6F0] border-2 border-[#D4AF37]/60 text-2xl font-mono font-bold tracking-[0.5em] text-[#0A4A40] focus:outline-none focus:border-[#0A4A40] shadow-inner"
                     />
+                    <div className="flex justify-center gap-3 pt-1">
+                      {[0, 1, 2, 3].map((idx) => (
+                        <div
+                          key={idx}
+                          className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                            adminPinInput.length > idx
+                              ? 'bg-[#0A4A40] scale-110 shadow-sm border border-[#D4AF37]'
+                              : 'bg-[#D4AF37]/25 border border-[#D4AF37]/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
                     {adminPinError && (
                       <p className="text-xs text-red-600 font-bold mt-2">
                         ⚠️ Incorrect PIN. Please try again!
