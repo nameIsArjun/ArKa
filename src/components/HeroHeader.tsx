@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { MonogramLogo } from './MonogramLogo';
 import { CountdownTimer } from './CountdownTimer';
 import { MandalaPattern, OrnamentalDivider } from './MandalaPattern';
-import { Calendar, Sparkles, ChevronDown, Heart } from 'lucide-react';
-import { WEDDING_DETAILS } from '../data/weddingData';
+import { Calendar, Sparkles, ChevronDown } from 'lucide-react';
 
 export const HeroHeader: React.FC = () => {
   return (
@@ -18,9 +17,7 @@ export const HeroHeader: React.FC = () => {
       {/* 2. Hero Ambient Gold & Emerald Radial Glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-[#D4AF37]/20 via-[#008070]/10 to-[#E5C158]/20 blur-3xl pointer-events-none rounded-full" />
 
-
-
-      {/* 4. Royal Gold Corner Filigree Ornaments */}
+      {/* 3. Royal Gold Corner Filigree Ornaments */}
       <div className="absolute top-4 left-4 w-12 h-12 border-t-2 border-l-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
       <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />
       <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-[#D4AF37]/60 pointer-events-none hidden sm:block" />

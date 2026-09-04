@@ -7,7 +7,6 @@ import { WEDDING_DETAILS } from '../data/weddingData';
 interface NavbarProps {
   onReplaySplash: () => void;
   onOpenPhotoDrive?: () => void;
-  isSaveTheDateMode: boolean;
   showPillarsOfLove?: boolean;
   showVisualMemories?: boolean;
   showPhotoDrive?: boolean;
@@ -16,7 +15,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   onReplaySplash,
   onOpenPhotoDrive,
-  isSaveTheDateMode,
   showPillarsOfLove = false,
   showVisualMemories = false,
   showPhotoDrive = true,
@@ -51,22 +49,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Left Links (Desktop) */}
-        {!isSaveTheDateMode ? (
-          <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold">
-            {navLinks.filter((_, idx) => idx < Math.ceil(navLinks.length / 2)).map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="hover:text-[#B38728] transition-colors relative py-1 group"
-              >
-                {link.label}
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#D4AF37] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
-          </nav>
-        ) : (
-          <div className="hidden md:block w-24" />
-        )}
+        <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold">
+          {navLinks.filter((_, idx) => idx < Math.ceil(navLinks.length / 2)).map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="hover:text-[#B38728] transition-colors relative py-1 group"
+            >
+              {link.label}
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#D4AF37] transition-all duration-300 group-hover:w-full" />
+            </a>
+          ))}
+        </nav>
 
         {/* Center Logo & Title Brand - REVEALS ONLY WHEN HERO LOGO LEAVES VIEWPORT */}
         <motion.div
@@ -96,22 +90,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </motion.div>
 
-        {/* Right Links, Audio Player & Replay Action */}
+        {/* Right Links & Action Buttons */}
         <div className="flex items-center gap-3">
-          {!isSaveTheDateMode && (
-            <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold mr-2">
-              {navLinks.filter((_, idx) => idx >= Math.ceil(navLinks.length / 2)).map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="hover:text-[#B38728] transition-colors relative py-1 group"
-                >
-                  {link.label}
-                  <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#D4AF37] transition-all duration-300 group-hover:w-full" />
-                </a>
-              ))}
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest text-[#2D3748] font-semibold mr-2">
+            {navLinks.filter((_, idx) => idx >= Math.ceil(navLinks.length / 2)).map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="hover:text-[#B38728] transition-colors relative py-1 group"
+              >
+                {link.label}
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#D4AF37] transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </nav>
 
           {/* Upload / View Photos Side Drawer Button */}
           {onOpenPhotoDrive && (
@@ -135,20 +127,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Mobile Menu Button */}
-          {!isSaveTheDateMode && (
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 text-[#0A4A40] hover:text-[#B38728]"
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          )}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-1.5 text-[#0A4A40] hover:text-[#B38728]"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Drawer Menu & Click-Outside Overlay */}
       <AnimatePresence>
-        {!isSaveTheDateMode && mobileMenuOpen && (
+        {mobileMenuOpen && (
           <>
             {/* Click-Outside Backdrop */}
             <motion.div
@@ -189,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setMobileMenuOpen(false);
                       onOpenPhotoDrive();
                     }}
-                    className="mt-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-[0.2em] shadow-lg hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-2 border border-[#B38728]/40 cursor-pointer"
+                    className="mt-2 py-3 px-6 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-[0.2em] shadow-lg hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-2 border border-[#B38728]/40 cursor-pointer"
                   >
                     <Camera size={16} />
                     <span>Upload & View Photos</span>
