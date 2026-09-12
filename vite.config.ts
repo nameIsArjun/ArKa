@@ -2,9 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
-import uploadHandler from './api/upload';
-import blessingsHandler from './api/blessings';
-import trackHandler from './api/track';
+
 
 // Helper to load .env.local in Vite config
 const loadEnvLocal = () => {
@@ -73,6 +71,7 @@ export default defineConfig({
                 },
               };
 
+              const { default: uploadHandler } = await import('./api/upload');
               await uploadHandler(fakeVercelReq, fakeVercelRes);
             };
 
@@ -122,6 +121,7 @@ export default defineConfig({
                   },
                   end: () => res.end(),
                 };
+                const { default: blessingsHandler } = await import('./api/blessings');
                 await blessingsHandler(fakeVercelReq, fakeVercelRes);
               } catch (err: any) {
                 res.statusCode = 500;
@@ -160,6 +160,7 @@ export default defineConfig({
                   },
                   end: () => res.end(),
                 };
+                const { default: trackHandler } = await import('./api/track');
                 await trackHandler(fakeVercelReq, fakeVercelRes);
               } catch (err: any) {
                 res.statusCode = 200;

@@ -1,14 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { OrnamentalDivider } from './MandalaPattern';
-import { Sparkles, Quote, PenTool, CheckCircle2, Trash2, X, ShieldCheck, RefreshCw } from 'lucide-react';
+import { OrnamentalDivider, CornerBorder } from './MandalaPattern';
+import {
+  Sparkles,
+  Quote,
+  PenTool,
+  CheckCircle2,
+  Trash2,
+  X,
+  ShieldCheck,
+  RefreshCw,
+  Crown,
+  ChevronLeft,
+  ChevronRight,
+  Flower2,
+  Pin
+} from 'lucide-react';
 import { triggerWeddingPetalBurst } from '../utils/confettiHelper';
 
-// Swiper for smooth horizontal auto-glide + touch carousel
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Keyboard } from 'swiper/modules';
+import { Autoplay, Keyboard, Navigation, Pagination } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
+import 'swiper/css/pagination';
 
 export interface BlessingItem {
   id: string;
@@ -17,6 +31,7 @@ export interface BlessingItem {
   message: string;
   date: string;
   status: 'approved' | 'pending' | 'denied';
+  isPinned?: boolean;
 }
 
 interface GuestbookSectionProps {
@@ -26,9 +41,11 @@ interface GuestbookSectionProps {
 export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = false }) => {
   const swiperRef = useRef<SwiperType | null>(null);
   const [blessings, setBlessings] = useState<BlessingItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [adminTab, setAdminTab] = useState<'approved' | 'pending'>('approved');
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [totalSlides, setTotalSlides] = useState<number>(0);
 
   // Form fields
   const [guestName, setGuestName] = useState<string>('');
@@ -40,6 +57,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
   // Fetch blessings live from Google Sheets API
   const fetchBlessings = async () => {
     try {
+      setIsLoading(true);
       const res = await fetch('/api/blessings');
       if (res.ok) {
         const data = await res.json();
@@ -71,7 +89,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
         body: JSON.stringify({
           action: 'submit',
           name: guestName.trim(),
-          relation: guestRelation.trim() || "Well Wisher",
+          relation: guestRelation.trim() || 'Well Wisher',
           message: guestMessage.trim(),
         }),
       });
@@ -125,45 +143,71 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
     }
   };
 
-  // Filter approved vs pending in exact spreadsheet order
+  const handleTogglePin = async (id: string) => {
+    setBlessings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, isPinned: !b.isPinned } : b))
+    );
+    try {
+      await fetch('/api/blessings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pin', id }),
+      });
+      fetchBlessings();
+    } catch (e) {
+      console.error('Error pinning blessing:', e);
+    }
+  };
+
+  // Filter approved vs pending
   const pendingBlessings = blessings.filter((b) => b.status === 'pending');
   const approvedBlessings = blessings.filter((b) => b.status === 'approved');
 
   const displayList = isAdmin && adminTab === 'pending' ? pendingBlessings : approvedBlessings;
 
+  // Sort pinned blessings to the front
+  const sortedList = [...displayList].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+
   return (
-    <section id="blessings" className="py-16 px-4 max-w-5xl mx-auto relative">
+    <section id="blessings" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto relative select-none">
+      {/* Background Subtle Warm Floral Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-radial from-[#D4AF37]/10 via-[#008070]/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Section Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#008070] font-bold mb-2">
           <Sparkles size={14} className="text-[#B38728]" />
-          <span>Love & Wishes</span>
+          <span>Keepsake Registry</span>
         </div>
 
         <h2 className="font-serif text-3xl sm:text-5xl font-extrabold text-[#0A4A40] tracking-tight">
-          Words of Love & Blessings
+          Words of Love &amp; Blessings
         </h2>
-        <p className="mt-2 text-sm sm:text-base text-[#2D3748] max-w-xl mx-auto font-normal">
-          Leave a heartfelt note, a cherished memory, or warm wishes for Arjun & Kanishka as they begin forever.
+        <p className="mt-3 text-sm sm:text-base text-[#2D3748] max-w-2xl mx-auto font-normal leading-relaxed">
+          A treasured collection of heartfelt prayers, cherished memories, and warm wedding wishes penned for Arjun &amp; Kanishka as they begin their forever.
         </p>
 
-        <OrnamentalDivider className="max-w-md mx-auto my-4" />
+        <OrnamentalDivider className="max-w-md mx-auto my-5" />
 
-        {/* Action Button: Submit Blessing */}
+        {/* Action Button: Send a Note */}
         <div className="mt-4 flex justify-center">
           <button
             onClick={() => setIsSubmitModalOpen(true)}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-lg hover:brightness-105 active:scale-98 transition-all flex items-center gap-2 cursor-pointer border border-[#B38728]/40"
+            className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-widest shadow-xl hover:brightness-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer border border-[#B38728]/40 group"
           >
-            <PenTool size={15} className="text-[#0A4A40]" />
-            <span>Leave a Note for the Couple</span>
+            <PenTool size={15} className="text-[#0A4A40] group-hover:rotate-12 transition-transform" />
+            <span>Send a Blessing for the Couple 💌</span>
           </button>
         </div>
       </div>
 
-      {/* ADMIN MODERATION CONTROL BAR (Visible when isAdmin is true) */}
+      {/* ADMIN MODERATION CONTROL BAR */}
       {isAdmin && (
-        <div className="mb-8 p-4 rounded-3xl bg-[#FFFDF9] border-2 border-[#D4AF37] shadow-xl max-w-3xl mx-auto">
+        <div className="mb-10 p-5 rounded-3xl bg-[#FFFDF9] border-2 border-[#D4AF37] shadow-xl max-w-3xl mx-auto">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D4AF37]/30 pb-3 mb-3">
             <div className="flex items-center gap-2">
               <ShieldCheck size={18} className="text-[#008070]" />
@@ -176,7 +220,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
               className="text-[11px] font-bold text-[#8C641D] bg-[#FAF6F0] hover:bg-[#D4AF37]/20 px-3 py-1 rounded-full border border-[#D4AF37]/40 flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw size={12} />
-              <span>Refresh Queue</span>
+              <span>Refresh Live Data</span>
             </button>
           </div>
 
@@ -209,123 +253,177 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
         </div>
       )}
 
-      {/* Empty State for Pending Tab */}
-      {isAdmin && adminTab === 'pending' && pendingBlessings.length === 0 && (
-        <div className="p-8 rounded-3xl bg-[#FFFDF9] border border-[#D4AF37]/40 text-center max-w-md mx-auto my-6 shadow-sm">
-          <CheckCircle2 size={32} className="text-green-600 mx-auto mb-2" />
-          <h4 className="font-serif font-bold text-base text-[#0A4A40]">
-            No Pending Blessings
-          </h4>
-          <p className="text-xs text-[#2D3748]/70 mt-1">
-            All submitted guest blessings have been reviewed!
+      {/* ROYAL KEEPSAKE CARDS SHOWCASE */}
+      {isLoading ? (
+        <div className="py-24 text-center">
+          <RefreshCw size={26} className="animate-spin text-[#D4AF37] mx-auto mb-3" />
+          <p className="text-xs font-serif font-bold uppercase tracking-wider text-[#8C641D]">
+            Loading heartfelt blessings...
           </p>
         </div>
-      )}
+      ) : sortedList.length === 0 ? (
+        <div className="p-12 rounded-3xl bg-[#FFFDF9] border-2 border-[#D4AF37]/40 text-center max-w-md mx-auto my-6 shadow-sm">
+          <Quote size={36} className="text-[#D4AF37] mx-auto mb-3 opacity-60" />
+          <h4 className="font-serif font-bold text-lg text-[#0A4A40]">No Blessings Yet</h4>
+          <p className="text-xs text-[#2D3748]/70 mt-1">
+            Be the very first to share your warm wishes for Arjun &amp; Kanishka!
+          </p>
+        </div>
+      ) : (
+        <div className="relative w-full">
+          {/* SWIPER CONTAINER (Auto-scrolls every 30 seconds + Manual Controls + Pauses on Hover) */}
+          <Swiper
+            modules={[Autoplay, Keyboard, Navigation, Pagination]}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+              setTotalSlides(sortedList.length);
+            }}
+            onSlideChange={(swiper) => {
+              setCurrentIndex(swiper.realIndex);
+            }}
+            loop={sortedList.length > 3}
+            grabCursor={true}
+            keyboard={{ enabled: true }}
+            autoplay={{
+              delay: 30000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            speed={800}
+            spaceBetween={20}
+            slidesPerView={1.08}
+            breakpoints={{
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 24,
+              },
+              1024: {
+                slidesPerView: 3,
+                spaceBetween: 28,
+              },
+            }}
+            className="w-full !py-4 !px-1"
+          >
+            {sortedList.map((msg) => {
+              const isPinned = !!msg.isPinned;
+              const formattedMessage = msg.message.replace(/^["“”']+|["“”']+$/g, '').trim();
 
-      {/* BLESSINGS AUTO-GLIDING MOTION CAROUSEL */}
-      <div className="relative w-full">
-        <Swiper
-          modules={[Autoplay, Keyboard]}
-          onSwiper={(swiper) => (swiperRef.current = swiper)}
-          loop={true}
-          grabCursor={true}
-          keyboard={{ enabled: true }}
-          autoplay={{
-            delay: 3500,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          speed={800}
-          spaceBetween={16}
-          slidesPerView={1.15}
-          breakpoints={{
-            640: {
-              slidesPerView: 2.15,
-              spaceBetween: 20,
-            },
-            1024: {
-              slidesPerView: 3,
-              spaceBetween: 24,
-            },
-          }}
-          className="w-full !pb-4"
-        >
-          {displayList.map((msg) => (
-            <SwiperSlide key={msg.id} className="!h-auto pb-2">
-              <div className="h-full bg-[#FFFDF9] border-2 border-[#D4AF37]/40 rounded-3xl p-5 sm:p-6 shadow-[0_10px_25px_-8px_rgba(212,175,55,0.15)] hover:shadow-2xl hover:border-[#D4AF37] transition-all text-left flex flex-col justify-between group select-none">
-                <div>
-                  {/* Pending Badge in Admin Mode */}
-                  {msg.status === 'pending' && (
-                    <div className="mb-3 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold w-fit flex items-center gap-1">
-                      <span>⏳ Awaiting Approval</span>
-                    </div>
-                  )}
+              return (
+                <SwiperSlide key={msg.id} className="!h-auto pb-3">
+                  <div
+                    className={`h-full relative bg-[#FFFDF9] rounded-3xl p-6 sm:p-7 text-left flex flex-col justify-between transition-all duration-300 ${isPinned
+                        ? 'border-2 border-[#D4AF37] shadow-[0_12px_32px_-8px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#FFFDF9]'
+                        : 'border-2 border-[#D4AF37]/35 shadow-[0_10px_28px_-10px_rgba(212,175,55,0.18)] hover:border-[#D4AF37] hover:shadow-[0_16px_36px_-8px_rgba(212,175,55,0.28)]'
+                      }`}
+                  >
+                    {/* Delicate Royal Corner Filigree */}
+                    <CornerBorder position="top-left" />
+                    <CornerBorder position="top-right" />
 
-                  {/* Header Info: Name + Relation to Bride/Groom */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-[#0A4A40] text-[#FFFDF9] font-serif font-extrabold text-sm flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
-                      {msg.name.slice(0, 1).toUpperCase()}
+                    <div>
+                      {/* Top Header: Elder Crown Badge or Pinned Ribbon */}
+                      {isPinned && (
+                        <div className="mb-3 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A059] text-[#0A4A40] border border-[#B38728] shadow-xs flex items-center gap-1 text-[10px] font-serif font-extrabold tracking-wider uppercase w-fit">
+                          <Crown size={11} className="text-[#0A4A40]" />
+                          <span>Elder Blessing</span>
+                        </div>
+                      )}
+
+                      {/* Author Info */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0A4A40] to-[#008070] text-[#FFFDF9] font-serif font-extrabold text-base flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
+                          {msg.name.slice(0, 1).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-serif font-extrabold text-base text-[#0A4A40] leading-snug truncate">
+                            {msg.name}
+                          </h4>
+                          <span className="text-[11px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block truncate mt-0.5">
+                            {msg.relation}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Calligraphy Message Body (100% visible and fully readable) */}
+                      <div className="relative bg-[#FAF6F0]/90 p-4 sm:p-5 rounded-2xl border border-[#D4AF37]/30 shadow-inner min-h-[140px] flex items-center">
+                        <Quote size={24} className="text-[#B38728] absolute top-2 right-2 opacity-25" />
+                        <p className="font-serif text-sm sm:text-[15px] text-[#2D3748] italic leading-relaxed pr-3 whitespace-pre-line">
+                          &ldquo;{formattedMessage}&rdquo;
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#0A4A40] truncate">
-                        {msg.name}
-                      </h4>
-                      <span className="text-[10px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block truncate">
-                        {msg.relation}
+
+                    {/* Footer: Date Tag & Interactive Petal / Admin Controls */}
+                    <div className="mt-5 pt-3 border-t border-[#D4AF37]/25 flex items-center justify-between">
+                      <span className="text-[11px] text-[#8C641D] font-serif font-bold tracking-wider">
+                        {msg.date}
                       </span>
-                    </div>
-                  </div>
 
-                  {/* Message */}
-                  <div className="relative bg-[#FAF6F0] p-4 rounded-2xl border border-[#D4AF37]/30 shadow-inner min-h-[110px] flex items-center">
-                    <Quote size={16} className="text-[#B38728] absolute top-2 right-2 opacity-30" />
-                    <p className="text-xs sm:text-[13px] text-[#2D3748] italic font-serif leading-relaxed pr-4">
-                      &ldquo;{msg.message.replace(/^["“”']+|["“”']+$/g, '').trim()}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                {/* Date Tag & Admin Action Bar */}
-                <div className="mt-4 pt-3 border-t border-[#D4AF37]/20 flex items-center justify-between">
-                  <span className="text-[10px] text-[#8C641D] font-serif font-bold uppercase tracking-wider">
-                    {msg.date}
-                  </span>
-
-                  {/* Website Admin Quick Action Controls */}
-                  {isAdmin && (
-                    <div className="flex items-center gap-1.5">
-                      {msg.status === 'pending' && (
+                      <div className="flex items-center gap-1.5">
+                        {/* Shower Petals Mini Action */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleApprove(msg.id);
+                            triggerWeddingPetalBurst();
                           }}
-                          className="px-3 py-1 rounded-full bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all flex items-center gap-1 shadow-xs cursor-pointer"
-                          title="Approve & Publish to Live Wall"
+                          className="p-1.5 rounded-full bg-[#FAF6F0] text-[#B38728] hover:bg-[#D4AF37] hover:text-white transition-all cursor-pointer border border-[#D4AF37]/40 shadow-2xs"
+                          title="Shower rose petals on this wish"
                         >
-                          <CheckCircle2 size={12} />
-                          <span>Approve</span>
+                          <Flower2 size={13} />
                         </button>
-                      )}
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeny(msg.id);
-                        }}
-                        className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
-                        title="Delete / Deny"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                        {/* Website Admin Controls */}
+                        {isAdmin && (
+                          <div className="flex items-center gap-1 ml-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTogglePin(msg.id);
+                              }}
+                              className={`p-1.5 rounded-full transition-all cursor-pointer ${isPinned
+                                  ? 'bg-[#D4AF37] text-white shadow-xs'
+                                  : 'bg-[#FAF6F0] text-[#8C641D] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40'
+                                }`}
+                              title={isPinned ? 'Unpin' : 'Pin to Front'}
+                            >
+                              <Pin size={11} />
+                            </button>
+
+                            {msg.status === 'pending' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApprove(msg.id);
+                                }}
+                                className="px-2.5 py-1 rounded-full bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+                                title="Approve"
+                              >
+                                <CheckCircle2 size={11} />
+                                <span>Approve</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeny(msg.id);
+                              }}
+                              className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer border border-red-200"
+                              title="Delete"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+                  </div>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
+        </div>
+      )}
 
       {/* GUEST BLESSING SUBMISSION MODAL */}
       <AnimatePresence>
@@ -352,7 +450,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                   </div>
 
                   <h3 className="font-serif text-2xl font-extrabold text-[#0A4A40]">
-                    Send Love to Arjun & Kanishka
+                    Send Love to Arjun &amp; Kanishka
                   </h3>
                   <p className="text-xs text-[#2D3748]/80 mt-1">
                     Whether it's a blessing, marriage advice, or a sweet memory, we would love to read your note!
@@ -404,7 +502,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                     <button
                       type="submit"
                       disabled={formSubmitting}
-                      className="w-full py-3 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
+                      className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs uppercase tracking-wider shadow-md hover:brightness-105 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
                     >
                       {formSubmitting ? 'Sending...' : 'Send With Love & Blessings 💌'}
                     </button>
@@ -421,7 +519,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                       Thank you for the love! ✨
                     </h4>
                     <p className="text-xs text-[#2D3748]/85 mt-2 leading-relaxed max-w-sm mx-auto font-serif">
-                      Your sweet words mean the world to us. Your message has been received with love!
+                      Your sweet words mean the world to Arjun &amp; Kanishka. Your message has been received with love!
                     </p>
                   </div>
 
