@@ -228,8 +228,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
             <button
               onClick={() => setAdminTab('approved')}
               className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${adminTab === 'approved'
-                  ? 'bg-[#0A4A40] text-[#FFFDF9] shadow-md'
-                  : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
+                ? 'bg-[#0A4A40] text-[#FFFDF9] shadow-md'
+                : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
                 }`}
             >
               <span>Published Wall ({approvedBlessings.length})</span>
@@ -238,8 +238,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
             <button
               onClick={() => setAdminTab('pending')}
               className={`flex-1 py-2 px-4 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${adminTab === 'pending'
-                  ? 'bg-[#B38728] text-white shadow-md'
-                  : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
+                ? 'bg-[#B38728] text-white shadow-md'
+                : 'bg-[#FAF6F0] text-[#0A4A40] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30'
                 }`}
             >
               <span>Pending Review Queue ({pendingBlessings.length})</span>
@@ -309,45 +309,45 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
               const formattedMessage = msg.message.replace(/^["“”']+|["“”']+$/g, '').trim();
 
               return (
-                <SwiperSlide key={msg.id} className="!h-auto pb-3">
+                <SwiperSlide key={msg.id} className="h-auto pb-3">
                   <div
-                    className={`h-full relative bg-[#FFFDF9] rounded-3xl p-6 sm:p-7 text-left flex flex-col justify-between transition-all duration-300 ${isPinned
-                        ? 'border-2 border-[#D4AF37] shadow-[0_12px_32px_-8px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#FFFDF9]'
-                        : 'border-2 border-[#D4AF37]/35 shadow-[0_10px_28px_-10px_rgba(212,175,55,0.18)] hover:border-[#D4AF37] hover:shadow-[0_16px_36px_-8px_rgba(212,175,55,0.28)]'
+                    className={`h-full min-h-[300px] sm:min-h-[275px] relative bg-[#FFFDF9] rounded-3xl p-5 sm:p-6 text-left flex flex-col justify-between transition-all duration-300 ${isPinned
+                      ? 'border-2 border-[#D4AF37] shadow-[0_12px_32px_-8px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#FFFDF9]'
+                      : 'border-2 border-[#D4AF37]/35 shadow-[0_10px_28px_-10px_rgba(212,175,55,0.18)] hover:border-[#D4AF37] hover:shadow-[0_16px_36px_-8px_rgba(212,175,55,0.28)]'
                       }`}
                   >
                     {/* Delicate Royal Corner Filigree */}
                     <CornerBorder position="top-left" />
                     <CornerBorder position="top-right" />
 
-                    <div>
+                    <div className="flex-1 flex flex-col">
                       {/* Top Header: Elder Crown Badge or Pinned Ribbon */}
                       {isPinned && (
-                        <div className="mb-3 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A059] text-[#0A4A40] border border-[#B38728] shadow-xs flex items-center gap-1 text-[10px] font-serif font-extrabold tracking-wider uppercase w-fit">
+                        <div className="mb-2.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A059] text-[#0A4A40] border border-[#B38728] shadow-xs flex items-center gap-1 text-[10px] font-serif font-extrabold tracking-wider uppercase w-fit">
                           <Crown size={11} className="text-[#0A4A40]" />
                           <span>Elder Blessing</span>
                         </div>
                       )}
 
                       {/* Author Info */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0A4A40] to-[#008070] text-[#FFFDF9] font-serif font-extrabold text-base flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0A4A40] to-[#008070] text-[#FFFDF9] font-serif font-extrabold text-sm flex items-center justify-center shadow-md border border-[#D4AF37] shrink-0">
                           {msg.name.slice(0, 1).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-serif font-extrabold text-base text-[#0A4A40] leading-snug truncate">
+                          <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#0A4A40] leading-snug truncate">
                             {msg.name}
                           </h4>
-                          <span className="text-[11px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block truncate mt-0.5">
+                          <span className="text-[10px] sm:text-[11px] text-[#008070] uppercase font-serif font-extrabold tracking-wider block truncate mt-0.5">
                             {msg.relation}
                           </span>
                         </div>
                       </div>
 
-                      {/* Calligraphy Message Body (100% visible and fully readable) */}
-                      <div className="relative bg-[#FAF6F0]/90 p-4 sm:p-5 rounded-2xl border border-[#D4AF37]/30 shadow-inner min-h-[140px] flex items-center">
-                        <Quote size={24} className="text-[#B38728] absolute top-2 right-2 opacity-25" />
-                        <p className="font-serif text-sm sm:text-[15px] text-[#2D3748] italic leading-relaxed pr-3 whitespace-pre-line">
+                      {/* Calligraphy Message Body (Contained and scrollable for long wishes) */}
+                      <div className="relative bg-[#FAF6F0]/90 p-3.5 sm:p-4 rounded-2xl border border-[#D4AF37]/30 shadow-inner flex-1 min-h-[100px] sm:min-h-[110px] max-h-[190px] overflow-y-auto">
+                        <Quote size={20} className="text-[#B38728] absolute top-2 right-2 opacity-25" />
+                        <p className="font-serif text-xs sm:text-sm text-[#2D3748] italic leading-relaxed pr-3 whitespace-pre-line break-words">
                           &ldquo;{formattedMessage}&rdquo;
                         </p>
                       </div>
@@ -381,8 +381,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({ isAdmin = fa
                                 handleTogglePin(msg.id);
                               }}
                               className={`p-1.5 rounded-full transition-all cursor-pointer ${isPinned
-                                  ? 'bg-[#D4AF37] text-white shadow-xs'
-                                  : 'bg-[#FAF6F0] text-[#8C641D] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40'
+                                ? 'bg-[#D4AF37] text-white shadow-xs'
+                                : 'bg-[#FAF6F0] text-[#8C641D] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/40'
                                 }`}
                               title={isPinned ? 'Unpin' : 'Pin to Front'}
                             >

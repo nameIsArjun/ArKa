@@ -379,9 +379,14 @@ export function App() {
 
       const now = Date.now();
       const lastTrack = sessionStorage.getItem('arka_last_track');
-      // Log on initial entry and major navigation changes (debounced by 30s)
-      if (!lastTrack || now - Number(lastTrack) > 30000) {
+      const currentSide = hasSelectedTeam ? activeTab : 'general';
+      const trackKey = `${currentPage}_${currentSide}`;
+      const lastTrackKey = sessionStorage.getItem('arka_last_track_key');
+
+      // Log on initial entry and major navigation / team changes (debounced by 30s unless side/page changed)
+      if (!lastTrack || trackKey !== lastTrackKey || now - Number(lastTrack) > 30000) {
         sessionStorage.setItem('arka_last_track', String(now));
+        sessionStorage.setItem('arka_last_track_key', trackKey);
         const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
         const userLocalTime = new Date().toLocaleString('en-US', {
           day: '2-digit',
@@ -398,7 +403,7 @@ export function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             path: currentPage === 'photos' ? '/photos' : window.location.pathname,
-            side: activeTab,
+            side: hasSelectedTeam ? activeTab : 'general',
             timezone: userTz,
             localTime: userLocalTime,
           }),
@@ -406,7 +411,7 @@ export function App() {
         }).catch(() => {});
       }
     } catch (e) {}
-  }, [currentPage, activeTab]);
+  }, [currentPage, activeTab, hasSelectedTeam]);
 
   const showPillarsOfLove = getShowPillarsOfLove();
   const showVisualMemories = getShowVisualMemories();
