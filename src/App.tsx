@@ -398,6 +398,31 @@ export function App() {
           hour12: true,
         });
 
+        // Screen & GPU hardware telemetry for detailed device model mapping
+        let gpu = '';
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (gl && 'getExtension' in gl) {
+            const debugInfo = (gl as WebGLRenderingContext).getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+              gpu = (gl as WebGLRenderingContext).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+            }
+          }
+        } catch (e) {}
+
+        let safeAreaTop = 0;
+        try {
+          const el = document.createElement('div');
+          el.style.paddingTop = 'env(safe-area-inset-top)';
+          document.body.appendChild(el);
+          safeAreaTop = parseInt(window.getComputedStyle(el).paddingTop, 10) || 0;
+          document.body.removeChild(el);
+        } catch (e) {}
+
+        const screenInfo = `${window.screen?.width || 0}x${window.screen?.height || 0}@${window.devicePixelRatio || 1}x`;
+        const isTouch = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+
         fetch('/api/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -406,6 +431,12 @@ export function App() {
             side: hasSelectedTeam ? activeTab : 'general',
             timezone: userTz,
             localTime: userLocalTime,
+            screen: screenInfo,
+            gpu: gpu,
+            isTouch: isTouch,
+            safeAreaTop: safeAreaTop,
+            cores: navigator.hardwareConcurrency || 0,
+            platform: navigator.platform || '',
           }),
           keepalive: true,
         }).catch(() => {});

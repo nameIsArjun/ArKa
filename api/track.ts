@@ -29,17 +29,151 @@ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_REFRESH_TOKEN) {
 const SHEET_ID = '1VZGTKbFvxFjRZ3MJ904Oqn07_9lZozypyPea6dIJ52w';
 const TAB_NAME = 'Visitors';
 
-// Helper to parse human-readable device name from User-Agent
-function parseDevice(userAgent: string): string {
-  if (!userAgent) return 'Unknown Device';
-  const ua = userAgent.toLowerCase();
-  if (ua.includes('iphone')) return 'Apple iPhone';
-  if (ua.includes('ipad')) return 'Apple iPad';
-  if (ua.includes('android')) return 'Android Device';
-  if (ua.includes('macintosh') || ua.includes('mac os')) return 'Mac Desktop / Laptop';
-  if (ua.includes('windows')) return 'Windows PC';
-  if (ua.includes('linux')) return 'Linux PC';
-  return 'Web Browser';
+// Helper to parse human-readable device model, OS, and screen details
+function parseDetailedDevice(userAgent: string, clientData: any = {}): string {
+  if (!userAgent && !clientData.platform) return 'Unknown Device';
+
+  const ua = (userAgent || '').toLowerCase();
+  const screen = clientData.screen || '';
+  const gpu = clientData.gpu || '';
+
+  // 1. Android Detection & Exact Model Extraction
+  if (ua.includes('android')) {
+    const androidMatch = userAgent.match(/Android\s+([0-9\.]+)(?:;\s*([^;\)]+))?/i);
+    const androidVer = androidMatch ? `Android ${androidMatch[1]}` : 'Android';
+    let model = androidMatch && androidMatch[2] ? androidMatch[2].trim() : '';
+
+    model = model.replace(/Build\/.*$/i, '').replace(/[\/\;].*$/, '').trim();
+
+    if (model.startsWith('SM-') || model.startsWith('SC-')) {
+      model = `Samsung (${model})`;
+    } else if (model.includes('Pixel')) {
+      model = `Google ${model}`;
+    } else if (model.includes('OnePlus') || model.startsWith('KB') || model.startsWith('IN20') || model.startsWith('CPH')) {
+      model = `OnePlus / Oppo (${model})`;
+    } else if (model.includes('Xiaomi') || model.includes('Redmi') || model.includes('POCO') || model.startsWith('22') || model.startsWith('23')) {
+      model = `Xiaomi / Redmi (${model})`;
+    } else if (model.includes('vivo') || model.startsWith('V2')) {
+      model = `Vivo (${model})`;
+    } else if (model.includes('moto') || model.startsWith('motorola')) {
+      model = `Motorola (${model})`;
+    }
+
+    const parts = [model || 'Android Device', `[${androidVer}]`];
+    if (screen) parts.push(`(${screen})`);
+    return parts.join(' ');
+  }
+
+  // 2. iPhone / iPad / iOS Detection with Screen-to-Model Mapping (iPhone 6 up to iPhone 17 Pro Max)
+  if (ua.includes('iphone') || ua.includes('ipad') || (ua.includes('macintosh') && clientData.isTouch)) {
+    const iosMatch = userAgent.match(/OS\s+([0-9_]+)\s+like\s+Mac/i);
+    const iosVer = iosMatch ? `iOS ${iosMatch[1].replace(/_/g, '.')}` : 'iOS';
+    const safeTop = Number(clientData.safeAreaTop) || 0;
+    const isDynamicIsland = safeTop >= 50;
+
+    let modelName = 'Apple iPhone';
+    if (ua.includes('ipad') || (ua.includes('macintosh') && clientData.isTouch)) {
+      modelName = 'Apple iPad';
+    } else {
+      // iPhone 16 Pro Max / 17 Pro Max (6.9" display: 440x956 @ 3x)
+      if (screen.includes('440x956')) {
+        modelName = iosVer.includes('19') || iosVer.includes('20')
+          ? 'Apple iPhone 17 Pro Max'
+          : 'Apple iPhone 16 / 17 Pro Max';
+      }
+      // iPhone 16 Pro / 17 / 17 Pro (6.3" display: 402x874 @ 3x)
+      else if (screen.includes('402x874')) {
+        modelName = iosVer.includes('19') || iosVer.includes('20')
+          ? 'Apple iPhone 17 / 17 Pro'
+          : 'Apple iPhone 16 Pro / 17';
+      }
+      // iPhone 17 Air / Slim (6.6" ultrathin display: 420x910 or 414x896 with Dynamic Island)
+      else if ((screen.includes('420x910') || screen.includes('414x896')) && isDynamicIsland) {
+        modelName = 'Apple iPhone 17 Air / Slim';
+      }
+      // iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus (6.7" display: 430x932 @ 3x)
+      else if (screen.includes('430x932')) {
+        modelName = 'Apple iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus';
+      }
+      // iPhone 14 Pro / 15 / 15 Pro / 16 (6.1" display: 393x852 @ 3x)
+      else if (screen.includes('393x852')) {
+        modelName = 'Apple iPhone 14 Pro / 15 / 15 Pro / 16';
+      }
+      // iPhone 12 / 13 / 14 (6.1" Notch display: 390x844 @ 3x)
+      else if (screen.includes('390x844')) {
+        modelName = isDynamicIsland ? 'Apple iPhone 15 / 16' : 'Apple iPhone 12 / 13 / 14 (Notch)';
+      }
+      // iPhone 12 Pro Max / 13 Pro Max / 14 Plus (6.7" Notch display: 428x926 @ 3x)
+      else if (screen.includes('428x926')) {
+        modelName = 'Apple iPhone 12/13 Pro Max / 14 Plus (Notch)';
+      }
+      // iPhone X / XS / 11 Pro / 12 Mini / 13 Mini (5.8" / 5.4" display: 375x812 @ 3x)
+      else if (screen.includes('375x812')) {
+        modelName = 'Apple iPhone X / XS / 11 Pro / 12-13 Mini';
+      }
+      // iPhone XR / 11 / XS Max / 11 Pro Max (6.1" / 6.5" display: 414x896 @ 2x/3x)
+      else if (screen.includes('414x896')) {
+        modelName = 'Apple iPhone XR / 11 / XS Max / 11 Pro Max';
+      }
+      // iPhone 6 / 7 / 8 / SE (4.7" Home button: 375x667 @ 2x)
+      else if (screen.includes('375x667')) {
+        modelName = 'Apple iPhone 6/7/8/SE';
+      }
+      // iPhone 6+ / 7+ / 8+ (5.5" Home button: 414x736 @ 3x)
+      else if (screen.includes('414x736')) {
+        modelName = 'Apple iPhone Plus (6+/7+/8+)';
+      }
+    }
+
+    const parts = [modelName, `[${iosVer}]`];
+    if (isDynamicIsland && !modelName.includes('Notch') && !modelName.includes('SE')) {
+      parts.push('[Dynamic Island]');
+    }
+    if (screen) parts.push(`(${screen})`);
+    return parts.join(' ');
+  }
+
+  // 3. Mac Desktop / Laptop
+  if (ua.includes('macintosh') || ua.includes('mac os')) {
+    const macMatch = userAgent.match(/Mac OS X\s+([0-9_]+)/i);
+    const macVer = macMatch ? `macOS ${macMatch[1].replace(/_/g, '.')}` : 'macOS';
+
+    let gpuShort = '';
+    if (gpu.includes('Apple') || gpu.includes('M1') || gpu.includes('M2') || gpu.includes('M3') || gpu.includes('M4')) {
+      gpuShort = 'Apple Silicon (M-Series)';
+    } else if (gpu.includes('Intel')) {
+      gpuShort = 'Intel Graphics';
+    } else if (gpu.includes('AMD') || gpu.includes('Radeon')) {
+      gpuShort = 'AMD Radeon';
+    }
+
+    const parts = ['Mac Desktop / Laptop', `[${macVer}]`];
+    if (gpuShort) parts.push(`[${gpuShort}]`);
+    if (screen) parts.push(`(${screen})`);
+    return parts.join(' ');
+  }
+
+  // 4. Windows PC
+  if (ua.includes('windows')) {
+    const winMatch = userAgent.match(/Windows NT\s+([0-9\.]+)/i);
+    let winVer = 'Windows PC';
+    if (winMatch) {
+      if (winMatch[1] === '10.0') winVer = 'Windows 10/11';
+      else if (winMatch[1] === '6.3') winVer = 'Windows 8.1';
+      else if (winMatch[1] === '6.1') winVer = 'Windows 7';
+      else winVer = `Windows NT ${winMatch[1]}`;
+    }
+    const parts = [winVer];
+    if (screen) parts.push(`(${screen})`);
+    return parts.join(' ');
+  }
+
+  // 5. Linux
+  if (ua.includes('linux')) {
+    return `Linux PC ${screen ? `(${screen})` : ''}`.trim();
+  }
+
+  return userAgent.slice(0, 50) || 'Web Browser';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -66,7 +200,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const region = (req.headers['x-vercel-ip-country-region'] as string) || body.region || '';
     const country = (req.headers['x-vercel-ip-country'] as string) || body.country || 'IN';
     const userAgent = (req.headers['user-agent'] as string) || '';
-    const device = parseDevice(userAgent);
+    const device = parseDetailedDevice(userAgent, body);
 
     const now = new Date();
     // 1. IST Equivalent Time
