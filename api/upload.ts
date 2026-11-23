@@ -66,23 +66,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
     oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-    // Action 1: List Photos from Google Drive Folder
+    // Action 1: List Photos & Videos from Google Drive Folder (all pages, no 100-item cap)
     if (req.method === 'GET' || action === 'list') {
       const drive = google.drive({ version: 'v3', auth: oauth2Client });
-      const driveListRes = await drive.files.list({
-        q: `'${folderId}' in parents and trashed = false and mimeType starts with 'image/'`,
-        fields: 'files(id, name, mimeType, webViewLink, webContentLink, thumbnailLink, createdTime)',
-        orderBy: 'createdTime desc',
-        pageSize: 100,
-      });
 
-      const files = (driveListRes.data.files || []).map((file) => {
-        const cdnThumb = `https://lh3.googleusercontent.com/d/${file.id}=s600`;
-        const cdnFull = `https://lh3.googleusercontent.com/d/${file.id}=s1600`;
+      const allFiles: any[] = [];
+      let pageToken: string | undefined = undefined;
+
+      do {
+        const driveListRes: any = await drive.files.list({
+          q: `'${folderId}' in parents and trashed = false and (mimeType starts with 'image/' or mimeType starts with 'video/')`,
+          fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink, createdTime)',
+          orderBy: 'createdTime desc',
+          pageSize: 1000,
+          pageToken,
+        });
+
+        const batch: any[] = driveListRes.data.files || [];
+        allFiles.push(...batch);
+        pageToken = driveListRes.data.nextPageToken || undefined;
+      } while (pageToken);
+
+      const files = allFiles.map((file: any) => {
+        const isVideo = (file.mimeType || '').startsWith('video/');
+        const cdnThumb = isVideo
+          ? (file.thumbnailLink || `https://drive.google.com/thumbnail?id=${file.id}&sz=s600`)
+          : `https://lh3.googleusercontent.com/d/${file.id}=s600`;
+        const cdnFull = isVideo
+          ? `https://drive.google.com/file/d/${file.id}/preview`
+          : `https://lh3.googleusercontent.com/d/${file.id}=s1600`;
         return {
           id: file.id || `file-${Math.random()}`,
-          name: file.name || 'Photo',
+          name: file.name || 'Media',
           mimeType: file.mimeType || 'image/jpeg',
+          isVideo,
           thumbnailUrl: cdnThumb,
           fullUrl: cdnFull,
           createdTime: file.createdTime,

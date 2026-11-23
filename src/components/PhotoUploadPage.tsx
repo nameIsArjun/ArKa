@@ -14,6 +14,8 @@ import 'swiper/css/navigation';
 interface GalleryPhoto {
   id: string;
   url: string;
+  mimeType?: string;
+  isVideo?: boolean;
   isPolaroid?: boolean;
   createdTime?: string;
 }
@@ -39,6 +41,9 @@ export const PhotoUploadPage: React.FC = () => {
   const [currentLightboxIndex, setCurrentLightboxIndex] = useState<number>(0);
   const lightboxSwiperRef = useRef<SwiperType | null>(null);
 
+  // Which video is currently playing inside the Swiper lightbox
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const fileBase64CacheRef = useRef<Map<File, Promise<string>>>(new Map());
@@ -57,6 +62,8 @@ export const PhotoUploadPage: React.FC = () => {
           const photos: GalleryPhoto[] = data.files.map((file: any, idx: number) => ({
             id: file.id,
             url: file.thumbnailUrl || file.fullUrl,
+            mimeType: file.mimeType,
+            isVideo: file.isVideo || (file.mimeType || '').startsWith('video/'),
             isPolaroid: idx % 5 === 0,
             createdTime: file.createdTime,
           }));
@@ -273,11 +280,13 @@ export const PhotoUploadPage: React.FC = () => {
   const openLightbox = (index: number) => {
     setLightboxInitialIndex(index);
     setCurrentLightboxIndex(index);
+    setPlayingVideoId(null); // reset any playing video when opening
   };
 
   const closeLightbox = () => {
     setLightboxInitialIndex(null);
   };
+
 
   const currentActivePhoto = drivePhotos[currentLightboxIndex] || drivePhotos[0];
 
@@ -474,7 +483,7 @@ export const PhotoUploadPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-[#2D3748]/70 mt-0.5">
                 {isLoadingDrive
                   ? 'Loading live photos from Google Drive...'
-                  : `${drivePhotos.length} photo${drivePhotos.length === 1 ? '' : 's'} shared by family & guests`}
+                  : `${drivePhotos.length} ${drivePhotos.length === 1 ? 'item' : 'photos & videos'} shared by family & guests`}
               </p>
             </div>
 
@@ -519,12 +528,33 @@ export const PhotoUploadPage: React.FC = () => {
                     }`}
                 >
                   <div className="w-full h-full overflow-hidden rounded-xl bg-black/5 relative aspect-square">
-                    <img
-                      src={photo.url}
-                      alt="Wedding Photo"
-                      className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                      loading="lazy"
-                    />
+                    {photo.isVideo ? (
+                      <>
+                        <div className="w-full h-full bg-black/80 flex items-center justify-center">
+                          <img
+                            src={photo.url}
+                            alt="Video thumbnail"
+                            className="w-full h-full object-cover object-center opacity-80"
+                            loading="lazy"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                        {/* Play icon overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-12 h-12 rounded-full bg-black/60 border-2 border-[#D4AF37] flex items-center justify-center shadow-lg">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D4AF37"><polygon points="5,3 19,12 5,21"/></svg>
+                          </div>
+                        </div>
+                        <div className="absolute top-2 left-2 bg-black/60 text-[#D4AF37] text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-[#D4AF37]/50">Video</div>
+                      </>
+                    ) : (
+                      <img
+                        src={photo.url}
+                        alt="Wedding Photo"
+                        className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2">
                       <Maximize2 size={20} className="text-[#FFFDF9]" />
                     </div>
@@ -575,7 +605,7 @@ export const PhotoUploadPage: React.FC = () => {
             {/* Top Floating Bar: Photo Counter & Close Button */}
             <div className="relative z-20 flex items-center justify-between w-full max-w-6xl mx-auto px-2 pt-1 pb-2">
               <div className="px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-[#D4AF37]/50 text-[#F3E5AB] font-serif font-bold text-xs sm:text-sm tracking-wider shadow-lg">
-                Photo {currentLightboxIndex + 1} of {drivePhotos.length}
+                {drivePhotos[currentLightboxIndex]?.isVideo ? 'Video' : 'Photo'} {currentLightboxIndex + 1} of {drivePhotos.length}
               </div>
 
               <button
@@ -596,8 +626,11 @@ export const PhotoUploadPage: React.FC = () => {
                 }}
                 onSlideChange={(swiper) => {
                   setCurrentLightboxIndex(swiper.activeIndex);
+                  setPlayingVideoId(null); // stop any video when swiping
                 }}
                 modules={[Navigation, Keyboard]}
+                noSwiping={true}
+                noSwipingSelector=".no-swipe"
                 keyboard={{ enabled: true }}
                 grabCursor={true}
                 className="w-full h-full flex items-center justify-center"
@@ -605,11 +638,52 @@ export const PhotoUploadPage: React.FC = () => {
                 {drivePhotos.map((photo, idx) => (
                   <SwiperSlide key={photo.id} className="w-full h-full flex items-center justify-center">
                     <div className="w-full h-full flex items-center justify-center p-1 sm:p-4">
-                      <img
-                        src={photo.url}
-                        alt={`Photo ${idx + 1}`}
-                        className="max-h-[75vh] sm:max-h-[78vh] max-w-[94vw] sm:max-w-full object-contain rounded-2xl shadow-2xl border border-[#D4AF37]/30 ring-1 ring-white/10"
-                      />
+                      {photo.isVideo ? (
+                        playingVideoId === photo.id ? (
+                          /* ── Playing: iframe with no-swipe so Swiper doesn't eat events ── */
+                          <div
+                            className="no-swipe relative rounded-2xl overflow-hidden shadow-2xl border border-[#D4AF37]/40"
+                            style={{ width: '100%', maxWidth: '480px', aspectRatio: '9/16', maxHeight: '78vh' }}
+                          >
+                            <iframe
+                              src={`https://drive.google.com/file/d/${photo.id}/preview`}
+                              title={`Video ${idx + 1}`}
+                              allow="autoplay; fullscreen"
+                              allowFullScreen
+                              className="w-full h-full"
+                              style={{ background: '#000' }}
+                            />
+                          </div>
+                        ) : (
+                          /* ── Paused: thumbnail + big play button ── */
+                          <div
+                            className="relative cursor-pointer rounded-2xl overflow-hidden shadow-2xl border-2 border-[#D4AF37]/50"
+                            style={{ width: '100%', maxWidth: '480px', aspectRatio: '9/16', maxHeight: '78vh' }}
+                            onClick={(e) => { e.stopPropagation(); setPlayingVideoId(photo.id); }}
+                          >
+                            <img
+                              src={photo.url}
+                              alt={`Video ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Cinematic dark overlay */}
+                            <div className="absolute inset-0 bg-black/50" />
+                            {/* Big gold play button */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                              <div className="w-20 h-20 rounded-full bg-black/60 border-4 border-[#D4AF37] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="#D4AF37"><polygon points="6,3 20,12 6,21"/></svg>
+                              </div>
+                              <span className="text-[#F3E5AB] font-serif font-bold text-sm tracking-widest uppercase opacity-90">Tap to Play</span>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <img
+                          src={photo.url}
+                          alt={`Photo ${idx + 1}`}
+                          className="max-h-[75vh] sm:max-h-[78vh] max-w-[94vw] sm:max-w-full object-contain rounded-2xl shadow-2xl border border-[#D4AF37]/30 ring-1 ring-white/10"
+                        />
+                      )}
                     </div>
                   </SwiperSlide>
                 ))}
@@ -641,22 +715,35 @@ export const PhotoUploadPage: React.FC = () => {
             {/* Bottom Floating Bar: High-Res Download Action Button */}
             <div className="relative z-20 flex items-center justify-center w-full max-w-6xl mx-auto pt-2 pb-1">
               {currentActivePhoto && (
-                <a
-                  href={currentActivePhoto.url}
-                  download="wedding_photo.jpg"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs sm:text-sm tracking-wider hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shadow-xl border border-[#B38728]/40 active:scale-95"
-                >
-                  <Download size={16} className="text-[#0A4A40]" />
-                  <span>Download Photo ({currentLightboxIndex + 1}/{drivePhotos.length})</span>
-                </a>
+                currentActivePhoto.isVideo ? (
+                  <a
+                    href={`https://drive.google.com/file/d/${currentActivePhoto.id}/view`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs sm:text-sm tracking-wider hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shadow-xl border border-[#B38728]/40 active:scale-95"
+                  >
+                    <ExternalLink size={16} className="text-[#0A4A40]" />
+                    <span>Open Video in Drive ({currentLightboxIndex + 1}/{drivePhotos.length})</span>
+                  </a>
+                ) : (
+                  <a
+                    href={currentActivePhoto.url}
+                    download="wedding_photo.jpg"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A059] text-[#0A4A40] font-serif font-extrabold text-xs sm:text-sm tracking-wider hover:brightness-105 transition-all flex items-center gap-2 cursor-pointer shadow-xl border border-[#B38728]/40 active:scale-95"
+                  >
+                    <Download size={16} className="text-[#0A4A40]" />
+                    <span>Download Photo ({currentLightboxIndex + 1}/{drivePhotos.length})</span>
+                  </a>
+                )
               )}
             </div>
 
           </div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };
