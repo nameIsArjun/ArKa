@@ -89,8 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const files = allFiles.map((file: any) => {
         const isVideo = (file.mimeType || '').startsWith('video/');
+        // For videos: use the public /thumbnail endpoint (no auth needed for shared files)
+        // For images: use the lh3 CDN which serves them fastest
         const cdnThumb = isVideo
-          ? (file.thumbnailLink || `https://drive.google.com/thumbnail?id=${file.id}&sz=s600`)
+          ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w600`
           : `https://lh3.googleusercontent.com/d/${file.id}=s600`;
         const cdnFull = isVideo
           ? `https://drive.google.com/file/d/${file.id}/preview`

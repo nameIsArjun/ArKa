@@ -530,15 +530,16 @@ export const PhotoUploadPage: React.FC = () => {
                   <div className="w-full h-full overflow-hidden rounded-xl bg-black/5 relative aspect-square">
                     {photo.isVideo ? (
                       <>
-                        <div className="w-full h-full bg-black/80 flex items-center justify-center">
-                          <img
-                            src={photo.url}
-                            alt="Video thumbnail"
-                            className="w-full h-full object-cover object-center opacity-80"
-                            loading="lazy"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        </div>
+                        {/* Video thumbnail — dark gradient fallback if Drive thumb fails */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#0A4A40]/70 via-[#1a1a1a]/80 to-[#0A4A40]/60" />
+                        <img
+                          src={photo.url}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 w-full h-full object-cover object-center"
+                          style={{ color: "transparent" }}
+                          loading="lazy"
+                        />
                         {/* Play icon overlay */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className="w-12 h-12 rounded-full bg-black/60 border-2 border-[#D4AF37] flex items-center justify-center shadow-lg">
@@ -661,13 +662,17 @@ export const PhotoUploadPage: React.FC = () => {
                             style={{ width: '100%', maxWidth: '480px', aspectRatio: '9/16', maxHeight: '78vh' }}
                             onClick={(e) => { e.stopPropagation(); setPlayingVideoId(photo.id); }}
                           >
+                            {/* Gradient fallback always visible behind thumbnail */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#0A4A40]/70 via-[#111]/80 to-[#0A4A40]/60" />
                             <img
                               src={photo.url}
-                              alt={`Video ${idx + 1}`}
-                              className="w-full h-full object-cover"
+                              alt=""
+                              aria-hidden="true"
+                              className="absolute inset-0 w-full h-full object-cover"
+                              style={{ color: "transparent" }}
                             />
                             {/* Cinematic dark overlay */}
-                            <div className="absolute inset-0 bg-black/50" />
+                            <div className="absolute inset-0 bg-black/40" />
                             {/* Big gold play button */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                               <div className="w-20 h-20 rounded-full bg-black/60 border-4 border-[#D4AF37] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
